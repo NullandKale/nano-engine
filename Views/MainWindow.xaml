@@ -3,15 +3,17 @@
         xmlns:vm="clr-namespace:NullEngine.ViewModels;assembly=NullEngine"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+        mc:Ignorable="d" WindowState="Maximized" Width="800" Height="600"
         x:Class="NullEngine.Views.MainWindow"
         Icon="/Assets/avalonia-logo.ico"
-        Title="NullEngine">
+        Title="NullEngine" >
 
     <Design.DataContext>
         <vm:MainWindowViewModel/>
     </Design.DataContext>
 
-    <TextBlock Text="{Binding Greeting}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-
+  <Grid ColumnDefinitions="*" RowDefinitions="*">
+    <Image Name="Frame" Stretch="UniformToFill" MinWidth="100" MinHeight="100"/>
+    <TextBlock Name="Info" Foreground="White" Background="Black" HorizontalAlignment="Left" VerticalAlignment="Top"/>
+  </Grid>
 </Window>
