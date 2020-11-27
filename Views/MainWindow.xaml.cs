@@ -4,6 +4,7 @@ using Avalonia.Markup.Xaml;
 using Avalonia.Media.Imaging;
 using NullEngine.Rendering;
 using System;
+using System.Diagnostics;
 using System.Runtime.InteropServices;
 
 namespace NullEngine.Views
@@ -23,7 +24,9 @@ namespace NullEngine.Views
         private Image Frame;
         private TextBlock Info;
 
-        Renderer renderer;
+        public Renderer renderer;
+
+        private bool hasSkippedFirstResizeEvent = false;
 
         public MainWindow()
         {
@@ -38,7 +41,7 @@ namespace NullEngine.Views
             Info = this.FindControl<TextBlock>("Info");
             ClientSizeProperty.Changed.Subscribe(HandleResized);
             Closing += MainWindow_Closing;
-            resize(ClientSize);
+            //resize(ClientSize);
         }
 
         private void MainWindow_Closing(object sender, System.ComponentModel.CancelEventArgs e)
@@ -48,7 +51,14 @@ namespace NullEngine.Views
 
         private void HandleResized(AvaloniaPropertyChangedEventArgs obj)
         {
-            resize(ClientSize);
+            if(!hasSkippedFirstResizeEvent)
+            {
+                hasSkippedFirstResizeEvent = true;
+            }
+            else
+            {
+                resize(ClientSize);
+            }
         }
 
         private void InitRenderer()
@@ -74,12 +84,16 @@ namespace NullEngine.Views
             }
 
             //width += ((width * 3) % 4);
+            if (wBitmap != null)
+            {
+                wBitmap.Dispose();
+            }
 
             wBitmap = new WriteableBitmap(new PixelSize(width, height), new Vector(96, 96), Avalonia.Platform.PixelFormat.Rgba8888);
             Frame.Source = wBitmap;
-            if(onResolutionChanged != null)
+            if(renderer != null)
             {
-                onResolutionChanged(width, height);
+                renderer.OnResChanged(width, height);
             }
         }
 
@@ -93,6 +107,10 @@ namespace NullEngine.Views
                 }
 
                 Info.Text = (int)frameRate + " MS";
+            }
+            else
+            {
+                Trace.WriteLine("invalid frame data size " + data.Length + " expected " + wBitmap.PixelSize.Width * wBitmap.PixelSize.Height * 4);
             }
         }
     }

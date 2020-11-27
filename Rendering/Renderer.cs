@@ -25,7 +25,7 @@ namespace NullEngine.Rendering
         private double frameTime;
 
         private ByteFrameBuffer deviceFrameBuffer;
-        private byte[] frameBuffer = new byte[0];
+        private byte[] frameBuffer = Array.Empty<byte>();
 
         private GPU gpu;
         private RenderDataManager renderDataManager;
@@ -43,8 +43,6 @@ namespace NullEngine.Rendering
             renderDataManager = new RenderDataManager(gpu);
             frameTimer = new FrameTimer();
 
-            window.onResolutionChanged = OnResChanged;
-
             renderThread = new Thread(RenderThread);
             renderThread.IsBackground = true;
         }
@@ -60,7 +58,7 @@ namespace NullEngine.Rendering
             renderThread.Join();
         }
 
-        private void OnResChanged(int width, int height)
+        public void OnResChanged(int width, int height)
         {
             this.width = width;
             this.height = height;
