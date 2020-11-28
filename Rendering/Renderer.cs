@@ -12,6 +12,7 @@ using System.Windows;
 using Avalonia.Controls;
 using NullEngine.Views;
 using Avalonia.Threading;
+using System.Diagnostics;
 
 namespace NullEngine.Rendering
 {
@@ -74,7 +75,7 @@ namespace NullEngine.Rendering
                 if(ReadyFrameBuffer())
                 {
                     RenderToFrameBuffer();
-                    Dispatcher.UIThread.InvokeAsync(Draw);
+                    Dispatcher.UIThread.Post(Draw);
                 }
 
                 frameTime = frameTimer.endUpdateForTargetUpdateTime(1000.0 / targetFramerate, true);

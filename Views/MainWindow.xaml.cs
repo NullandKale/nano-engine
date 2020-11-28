@@ -26,8 +26,6 @@ namespace NullEngine.Views
 
         public Renderer renderer;
 
-        private bool hasSkippedFirstResizeEvent = false;
-
         public MainWindow()
         {
             InitializeComponent();
@@ -41,7 +39,6 @@ namespace NullEngine.Views
             Info = this.FindControl<TextBlock>("Info");
             ClientSizeProperty.Changed.Subscribe(HandleResized);
             Closing += MainWindow_Closing;
-            //resize(ClientSize);
         }
 
         private void MainWindow_Closing(object sender, System.ComponentModel.CancelEventArgs e)
@@ -51,14 +48,7 @@ namespace NullEngine.Views
 
         private void HandleResized(AvaloniaPropertyChangedEventArgs obj)
         {
-            if(!hasSkippedFirstResizeEvent)
-            {
-                hasSkippedFirstResizeEvent = true;
-            }
-            else
-            {
-                resize(ClientSize);
-            }
+            resize(ClientSize);
         }
 
         private void InitRenderer()
@@ -83,7 +73,6 @@ namespace NullEngine.Views
                 width = (int)(width / -scale);
             }
 
-            //width += ((width * 3) % 4);
             if (wBitmap != null)
             {
                 wBitmap.Dispose();
@@ -91,6 +80,7 @@ namespace NullEngine.Views
 
             wBitmap = new WriteableBitmap(new PixelSize(width, height), new Vector(96, 96), Avalonia.Platform.PixelFormat.Rgba8888);
             Frame.Source = wBitmap;
+
             if(renderer != null)
             {
                 renderer.OnResChanged(width, height);
