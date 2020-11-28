@@ -27,8 +27,8 @@ namespace NullEngine.Rendering
 
         private ByteFrameBuffer deviceFrameBuffer;
         private byte[] frameBuffer = Array.Empty<byte>();
-
         private GPU gpu;
+        private Camera camera;
         private RenderDataManager renderDataManager;
         private FrameData frameData;
         private MainWindow window;
@@ -63,6 +63,8 @@ namespace NullEngine.Rendering
         {
             this.width = width;
             this.height = height;
+            
+            camera = new Camera(new Vec3(0, -1, -5), new Vec3(0, -1, -4), Vec3.unitVector(new Vec3(0, 1, 0)), width, height, 3, 40f);
         }
 
         //eveything below this happens in the render thread

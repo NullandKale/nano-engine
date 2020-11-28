@@ -18,6 +18,7 @@ namespace NullEngine.Rendering.DataStructures
         public List<float> rawUVBuffers;
         public List<hMesh> hMeshes;
         public List<dMesh> meshBuffers;
+        public List<Sphere> spheres;
 
         public RenderData renderData;
         private GPU gpu;
@@ -92,6 +93,7 @@ namespace NullEngine.Rendering.DataStructures
             rawVertexBuffers = new List<float>(new float[3]);
             rawUVBuffers = new List<float>(new float[2]);
             meshBuffers = new List<dMesh>(new dMesh[1]);
+            spheres = new List<Sphere>(new Sphere[1]);
             isDirty = true;
         }
     }
@@ -105,6 +107,7 @@ namespace NullEngine.Rendering.DataStructures
         public MemoryBuffer<float> rawVertexBuffers;
         public MemoryBuffer<float> rawUVBuffers;
         public MemoryBuffer<dMesh> meshBuffers;
+        public MemoryBuffer<Sphere> spheres;
 
         public dRenderData deviceRenderData;
 
@@ -128,6 +131,9 @@ namespace NullEngine.Rendering.DataStructures
             meshBuffers = device.Allocate<dMesh>(dataManager.meshBuffers.Count);
             meshBuffers.CopyFrom(dataManager.meshBuffers.ToArray(), 0, 0, dataManager.meshBuffers.Count);
 
+            spheres = device.Allocate<Sphere>(dataManager.spheres.Count);
+            spheres.CopyFrom(dataManager.spheres.ToArray(), 0, 0, dataManager.spheres.Count);
+
             deviceRenderData = new dRenderData(this);
         }
 
@@ -149,6 +155,7 @@ namespace NullEngine.Rendering.DataStructures
         public ArrayView<float> rawVertexBuffers;
         public ArrayView<float> rawUVBuffers;
         public ArrayView<dMesh> meshBuffers;
+        public ArrayView<Sphere> spheres;
 
         public dRenderData(RenderData renderData)
         {
@@ -158,6 +165,7 @@ namespace NullEngine.Rendering.DataStructures
             rawVertexBuffers = renderData.rawVertexBuffers;
             rawUVBuffers = renderData.rawUVBuffers;
             meshBuffers = renderData.meshBuffers;
+            spheres = renderData.spheres;
         }
     }
 

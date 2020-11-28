@@ -14,7 +14,7 @@ namespace NullEngine.Rendering.Implementation
         public Context context;
         public Accelerator device;
 
-        public Action<Index1, dByteFrameBuffer, dFrameData, dRenderData> generateFrame;
+        public Action<Index1, dByteFrameBuffer, dFrameData, dRenderData> clearFrame;
         public GPU(bool forceCPU)
         {
             context = new Context(ContextFlags.FastMath);
@@ -34,7 +34,7 @@ namespace NullEngine.Rendering.Implementation
 
         private void initRenderKernels()
         {
-            generateFrame = device.LoadAutoGroupedStreamKernel<Index1, dByteFrameBuffer, dFrameData, dRenderData>(GPUKernels.GenerateFrame);
+            clearFrame = device.LoadAutoGroupedStreamKernel<Index1, dByteFrameBuffer, dFrameData, dRenderData>(GPUKernels.ClearFrame);
         }
 
         public void Dispose()
@@ -45,16 +45,21 @@ namespace NullEngine.Rendering.Implementation
 
         public void Render(ByteFrameBuffer output, RenderDataManager renderDataManager, FrameData frameData)
         {
-            generateFrame(output.memoryBuffer.Length / 4, output.frameBuffer, frameData.deviceFrameData, renderDataManager.getDeviceRenderData());
+            clearFrame(output.memoryBuffer.Length / 4, output.frameBuffer, frameData.deviceFrameData, renderDataManager.getDeviceRenderData());
             device.Synchronize();
         }
     }
 
     public static class GPUKernels
     {
-        public static void GenerateFrame(Index1 pixel, dByteFrameBuffer output, dFrameData frameData, dRenderData renderData)
+        public static void ClearFrame(Index1 pixel, dByteFrameBuffer output, dFrameData frameData, dRenderData renderData)
         {
             output.writeFrameBuffer((int)(pixel * 4), 1f, 0f, 1f, 1f);
+        }
+
+        public static void GenerateRays(Index1 pixel, Camera camera, dFrameData frameData)
+        {
+
         }
 
     }

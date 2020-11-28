@@ -14,7 +14,7 @@ namespace NullEngine.Rendering.DataStructures
         public MemoryBuffer<float> colorBuffer;
         public MemoryBuffer<float> lightBuffer;
         public MemoryBuffer<float> depthBuffer;
-
+        public MemoryBuffer<Ray> rayBuffer;
         public MemoryBuffer<float> outputBuffer;
 
 
@@ -28,9 +28,10 @@ namespace NullEngine.Rendering.DataStructures
             colorBuffer = device.Allocate<float>(width * height * 3);
             lightBuffer = device.Allocate<float>(width * height * 3);
             depthBuffer = device.Allocate<float>(width * height * 3);
+            rayBuffer = device.Allocate<Ray>(width * height);
             outputBuffer = device.Allocate<float>(width * height * 4);
 
-            deviceFrameData = new dFrameData(width, height, colorBuffer, lightBuffer, depthBuffer, outputBuffer);
+            deviceFrameData = new dFrameData(this);
         }
 
         public void Dispose()
@@ -49,16 +50,18 @@ namespace NullEngine.Rendering.DataStructures
         public ArrayView<float> colorBuffer;
         public ArrayView<float> lightBuffer;
         public ArrayView<float> depthBuffer;
+        public ArrayView<Ray> rayBuffer;
         public ArrayView<float> outputBuffer;
 
-        public dFrameData(int width, int height, ArrayView<float> colorBuffer, ArrayView<float> lightBuffer, ArrayView<float> depthBuffer, ArrayView<float> outputBuffer)
+        public dFrameData(FrameData frameData)
         {
-            this.width = width;
-            this.height = height;
-            this.colorBuffer = colorBuffer;
-            this.lightBuffer = lightBuffer;
-            this.depthBuffer = depthBuffer;
-            this.outputBuffer = outputBuffer;
+            width = frameData.width;
+            height = frameData.height;
+            colorBuffer = frameData.colorBuffer;
+            lightBuffer = frameData.lightBuffer;
+            depthBuffer = frameData.depthBuffer;
+            rayBuffer = frameData.rayBuffer;
+            outputBuffer = frameData.outputBuffer;
         }
     }
 }
