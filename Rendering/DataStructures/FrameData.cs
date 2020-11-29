@@ -17,6 +17,7 @@ namespace NullEngine.Rendering.DataStructures
         public MemoryBuffer<float> lightBuffer;
         public MemoryBuffer<float> depthBuffer;
         public MemoryBuffer<float> outputBuffer;
+        public MemoryBuffer<int> metaBuffer;
 
         public MemoryBuffer<Ray> rayBuffer;
         public MemoryBuffer<XorShift128Plus> rngBuffer;
@@ -32,6 +33,7 @@ namespace NullEngine.Rendering.DataStructures
             lightBuffer = device.Allocate<float>(width * height * 3);
             depthBuffer = device.Allocate<float>(width * height * 3);
             outputBuffer = device.Allocate<float>(width * height * 4);
+            metaBuffer = device.Allocate<int>(width * height);
 
             rayBuffer = device.Allocate<Ray>(width * height);
             rngBuffer = device.Allocate<XorShift128Plus>(width * height);
@@ -61,6 +63,7 @@ namespace NullEngine.Rendering.DataStructures
         public ArrayView<Ray> rayBuffer;
         public ArrayView<XorShift128Plus> rngBuffer;
         public ArrayView<float> outputBuffer;
+        public ArrayView<int> metaBuffer;
 
         public dFrameData(FrameData frameData)
         {
@@ -72,6 +75,7 @@ namespace NullEngine.Rendering.DataStructures
             rayBuffer = frameData.rayBuffer;
             rngBuffer = frameData.rngBuffer;
             outputBuffer = frameData.outputBuffer;
+            metaBuffer = frameData.metaBuffer;
         }
     }
 }

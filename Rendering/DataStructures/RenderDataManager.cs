@@ -19,6 +19,8 @@ namespace NullEngine.Rendering.DataStructures
         public List<hMesh> hMeshes;
         public List<dMesh> meshBuffers;
         public List<Sphere> spheres;
+        public List<int> lightSphereIDs;
+        public List<MaterialData> mats;
 
         public RenderData renderData;
         private GPU gpu;
@@ -94,6 +96,8 @@ namespace NullEngine.Rendering.DataStructures
             rawUVBuffers = new List<float>(new float[2]);
             meshBuffers = new List<dMesh>(new dMesh[1]);
             spheres = new List<Sphere>(new Sphere[1]);
+            lightSphereIDs = new List<int>(new int[1]);
+            mats = new List<MaterialData>(new MaterialData[1]);
             isDirty = true;
         }
     }
@@ -108,6 +112,8 @@ namespace NullEngine.Rendering.DataStructures
         public MemoryBuffer<float> rawUVBuffers;
         public MemoryBuffer<dMesh> meshBuffers;
         public MemoryBuffer<Sphere> spheres;
+        public MemoryBuffer<int> lightSphereIDs;
+        public MemoryBuffer<MaterialData> mats;
 
         public dRenderData deviceRenderData;
 
@@ -134,6 +140,12 @@ namespace NullEngine.Rendering.DataStructures
             spheres = device.Allocate<Sphere>(dataManager.spheres.Count);
             spheres.CopyFrom(dataManager.spheres.ToArray(), 0, 0, dataManager.spheres.Count);
 
+            lightSphereIDs = device.Allocate<int>(dataManager.lightSphereIDs.Count);
+            lightSphereIDs.CopyFrom(dataManager.lightSphereIDs.ToArray(), 0, 0, dataManager.lightSphereIDs.Count);
+
+            mats = device.Allocate<MaterialData>(dataManager.mats.Count);
+            mats.CopyFrom(dataManager.mats.ToArray(), 0, 0, dataManager.mats.Count);
+
             deviceRenderData = new dRenderData(this);
         }
 
@@ -143,6 +155,9 @@ namespace NullEngine.Rendering.DataStructures
             rawVertexBuffers.Dispose();
             textures.Dispose();
             meshBuffers.Dispose();
+            spheres.Dispose();
+            lightSphereIDs.Dispose();
+            mats.Dispose();
         }
     }
 
@@ -156,6 +171,8 @@ namespace NullEngine.Rendering.DataStructures
         public ArrayView<float> rawUVBuffers;
         public ArrayView<dMesh> meshBuffers;
         public ArrayView<Sphere> spheres;
+        public ArrayView<int> lightSphereIDs;
+        public ArrayView<MaterialData> mats;
 
         public dRenderData(RenderData renderData)
         {
@@ -166,6 +183,8 @@ namespace NullEngine.Rendering.DataStructures
             rawUVBuffers = renderData.rawUVBuffers;
             meshBuffers = renderData.meshBuffers;
             spheres = renderData.spheres;
+            lightSphereIDs = renderData.lightSphereIDs;
+            mats = renderData.mats;
         }
     }
 

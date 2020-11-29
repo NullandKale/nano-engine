@@ -122,7 +122,7 @@ namespace NullEngine.Rendering
         {
             if (deviceFrameBuffer != null && !deviceFrameBuffer.isDisposed)
             {
-                gpu.Render(deviceFrameBuffer, renderDataManager, frameData);
+                gpu.Render(deviceFrameBuffer, camera, renderDataManager, frameData);
                 deviceFrameBuffer.memoryBuffer.CopyTo(frameBuffer, 0, 0, frameBuffer.Length);
             }
         }

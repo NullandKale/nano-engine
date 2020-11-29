@@ -51,9 +51,6 @@ namespace NullEngine.Views
 
         private void HandleResized(AvaloniaPropertyChangedEventArgs obj)
         {
-            //WTF? fixes resizing issues with writing to writeablebitmap
-            //Dispatcher.UIThread.Post(() => { resize(ClientSize); });
-
             resize(ClientSize);
         }
 
@@ -102,6 +99,7 @@ namespace NullEngine.Views
                     Marshal.Copy(data, 0, framebuffer.Address, data.Length);
                 }
 
+                //HACK must manually call invalidate on the Image control that displays the writeable bitmap
                 Frame.InvalidateVisual();
 
                 Info.Text = (int)frameRate + " MS";
