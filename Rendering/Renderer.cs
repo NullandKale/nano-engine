@@ -107,6 +107,7 @@ namespace NullEngine.Rendering
                     frameBuffer = new byte[width * height * 4];
                     deviceFrameBuffer = new ByteFrameBuffer(gpu, height, width);
                     frameData = new FrameData(gpu.device, width, height);
+                    gpu.InitRNG(frameData);
                 }
 
                 return true;
