@@ -39,6 +39,7 @@ namespace NullEngine.Views
             Info = this.FindControl<TextBlock>("Info");
             ClientSizeProperty.Changed.Subscribe(HandleResized);
             Closing += MainWindow_Closing;
+            resize(ClientSize);
         }
 
         private void MainWindow_Closing(object sender, System.ComponentModel.CancelEventArgs e)
