@@ -84,7 +84,7 @@ namespace NullEngine.Rendering.Implementation
 
         public static void ClearFrame(Index1 pixel, dByteFrameBuffer output, dFrameData frameData, dRenderData renderData)
         {
-            output.writeFrameBuffer((int)(pixel * 4), 1f, 0f, 1f, 1f);
+            output.writeFrameBuffer((int)(pixel * 4), frameData.rngBuffer[pixel].NextFloat(), frameData.rngBuffer[pixel].NextFloat(), frameData.rngBuffer[pixel].NextFloat(), 1f);
         }
 
         public static void GenerateRays(Index1 pixel, Camera camera, dFrameData frameData)

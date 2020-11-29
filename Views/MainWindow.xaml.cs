@@ -37,7 +37,7 @@ namespace NullEngine.Views
         {
             AvaloniaXamlLoader.Load(this);
             Frame = this.FindControl<Image>("Frame");
-            Info = this.FindControl<TextBlock>("Info");
+            //Info = this.FindControl<TextBlock>("Info");
             ClientSizeProperty.Changed.Subscribe(HandleResized);
             Closing += MainWindow_Closing;
             resize(ClientSize);
@@ -94,13 +94,14 @@ namespace NullEngine.Views
         {
             if (data.Length == wBitmap.PixelSize.Width * wBitmap.PixelSize.Height * 4)
             {
-                Console.WriteLine("");
                 using (Avalonia.Platform.ILockedFramebuffer framebuffer = wBitmap.Lock())
                 {
                     Marshal.Copy(data, 0, framebuffer.Address, data.Length);
                 }
 
-                Info.Text = (int)frameRate + " MS";
+                Frame.Source = wBitmap;
+
+                //Info.Text = (int)frameRate + " MS";
             }
             else
             {
