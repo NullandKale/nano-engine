@@ -2,6 +2,7 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Markup.Xaml;
 using Avalonia.Media.Imaging;
+using Avalonia.Platform;
 using Avalonia.Threading;
 using NullEngine.Rendering;
 using System;
@@ -37,7 +38,7 @@ namespace NullEngine.Views
         {
             AvaloniaXamlLoader.Load(this);
             Frame = this.FindControl<Image>("Frame");
-            //Info = this.FindControl<TextBlock>("Info");
+            Info = this.FindControl<TextBlock>("Info");
             ClientSizeProperty.Changed.Subscribe(HandleResized);
             Closing += MainWindow_Closing;
             resize(ClientSize);
@@ -51,7 +52,9 @@ namespace NullEngine.Views
         private void HandleResized(AvaloniaPropertyChangedEventArgs obj)
         {
             //WTF? fixes resizing issues with writing to writeablebitmap
-            Dispatcher.UIThread.Post(() => { resize(ClientSize); });
+            //Dispatcher.UIThread.Post(() => { resize(ClientSize); });
+
+            resize(ClientSize);
         }
 
         private void InitRenderer()
@@ -94,14 +97,14 @@ namespace NullEngine.Views
         {
             if (data.Length == wBitmap.PixelSize.Width * wBitmap.PixelSize.Height * 4)
             {
-                using (Avalonia.Platform.ILockedFramebuffer framebuffer = wBitmap.Lock())
+                using (ILockedFramebuffer framebuffer = wBitmap.Lock())
                 {
                     Marshal.Copy(data, 0, framebuffer.Address, data.Length);
                 }
 
-                Frame.Source = wBitmap;
+                Frame.InvalidateVisual();
 
-                //Info.Text = (int)frameRate + " MS";
+                Info.Text = (int)frameRate + " MS";
             }
             else
             {
