@@ -2,6 +2,7 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Markup.Xaml;
 using Avalonia.Media.Imaging;
+using Avalonia.Threading;
 using NullEngine.Rendering;
 using System;
 using System.Diagnostics;
@@ -49,7 +50,8 @@ namespace NullEngine.Views
 
         private void HandleResized(AvaloniaPropertyChangedEventArgs obj)
         {
-            resize(ClientSize);
+            //WTF? fixes resizing issues with writing to writeablebitmap
+            Dispatcher.UIThread.Post(() => { resize(ClientSize); });
         }
 
         private void InitRenderer()
@@ -92,6 +94,7 @@ namespace NullEngine.Views
         {
             if (data.Length == wBitmap.PixelSize.Width * wBitmap.PixelSize.Height * 4)
             {
+                Console.WriteLine("");
                 using (Avalonia.Platform.ILockedFramebuffer framebuffer = wBitmap.Lock())
                 {
                     Marshal.Copy(data, 0, framebuffer.Address, data.Length);
