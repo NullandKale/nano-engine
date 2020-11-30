@@ -13,7 +13,7 @@ namespace NullEngine.Views
 {
     public class MainWindow : Window
     {
-        public double scale = -4;
+        public double scale = -2;
 
         public Action<int, int> onResolutionChanged;
         public int width;
@@ -56,7 +56,7 @@ namespace NullEngine.Views
 
         private void InitRenderer()
         {
-            renderer = new Renderer(this, 60, false);
+            renderer = new Renderer(this, "", 60, false);
             renderer.Start();
         }
 

@@ -25,23 +25,37 @@ namespace NullEngine.Rendering
         private int targetFramerate;
         private double frameTime;
 
-        private ByteFrameBuffer deviceFrameBuffer;
-        private byte[] frameBuffer = Array.Empty<byte>();
-        private GPU gpu;
-        private Camera camera;
-        private RenderDataManager renderDataManager;
-        private FrameData frameData;
         private MainWindow window;
         private Thread renderThread;
         private FrameTimer frameTimer;
 
-        public Renderer(MainWindow window, int targetFramerate, bool forceCPU)
+        private ByteFrameBuffer deviceFrameBuffer;
+        private byte[] frameBuffer = Array.Empty<byte>();
+
+        private GPU gpu;
+        private Camera camera;
+        private RenderDataManager renderDataManager;
+        private FrameData frameData;
+
+        public Renderer(MainWindow window, string sceneFileName, int targetFramerate, bool forceCPU)
         {
             this.window = window;
             this.targetFramerate = targetFramerate;
 
             gpu = new GPU(forceCPU);
             renderDataManager = new RenderDataManager(gpu);
+
+            int mat0 = renderDataManager.addMaterialForID(MaterialData.makeDiffuse(new Vec3(1.0, 0, 0)));
+            int mat1 = renderDataManager.addMaterialForID(MaterialData.makeDiffuse(new Vec3(0, 1.0, 0)));
+            int mat2 = renderDataManager.addMaterialForID(MaterialData.makeDiffuse(new Vec3(0, 0, 1.00)));
+            int mat3 = renderDataManager.addMaterialForID(MaterialData.makeLight(new Vec3(10, 10, 10)));
+            int mat4 = renderDataManager.addMaterialForID(MaterialData.makeDiffuse(new Vec3(1, 1, 1)));
+            renderDataManager.addSphereForID(new Sphere(new Vec3(0, -1, 0), 0.5f, mat0));
+            renderDataManager.addSphereForID(new Sphere(new Vec3(1, -1, 0), 0.5f, mat1));
+            renderDataManager.addSphereForID(new Sphere(new Vec3(-1, -1, 0), 0.5f, mat2));
+            renderDataManager.addSphereForID(new Sphere(new Vec3(-1, -10, 0), 0.5f, mat3));
+            renderDataManager.addSphereForID(new Sphere(new Vec3(-1, 50, 0), 50f, mat4));
+
             frameTimer = new FrameTimer();
 
             renderThread = new Thread(RenderThread);

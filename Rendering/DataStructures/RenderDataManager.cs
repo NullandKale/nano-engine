@@ -58,7 +58,27 @@ namespace NullEngine.Rendering.DataStructures
             return toReturn;
         }
 
-        private int addDMeshForID(AABB boundingBox, Vec3 origin, Vec3 rotation, List<int> triangles, List<float> verts, List<float> uvs)
+        public int addMaterialForID(MaterialData material)
+        {
+            int id = mats.Count;
+            mats.Add(material);
+            isDirty = true;
+            return id;
+        }
+
+        public int addSphereForID(Sphere sphere)
+        {
+            int id = spheres.Count;
+            spheres.Add(sphere);
+            if(sphere.materialIndex != -1 && mats[sphere.materialIndex].type == 3)
+            {
+                lightSphereIDs.Add(id);
+            }
+            isDirty = true;
+            return id;
+        }
+
+        public int addDMeshForID(AABB boundingBox, Vec3 origin, Vec3 rotation, List<int> triangles, List<float> verts, List<float> uvs)
         {
             int Voffset = rawVertexBuffers.Count;
             int Uoffset = rawUVBuffers.Count;
