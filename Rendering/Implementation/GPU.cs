@@ -20,9 +20,12 @@ namespace NullEngine.Rendering.Implementation
         private Action<Index1, dFrameData, ArrayView<ulong>> InitPerPixelRngData;
         private Action<Index1, Camera, dFrameData> GenerateRays;
         private Action<Index1, Camera, dFrameData, dRenderData> ColorRay;
+        private Action<Index1, ArrayView<float>> NormalizeLighting;
+        private Action<Index1, dFrameData> CombineLightingAndColor;
+        private Action<Index1, Camera, ArrayView<float>, ArrayView<byte>> DrawToBitmap;
         public GPU(bool forceCPU)
         {
-            context = new Context(ContextFlags.FastMath | ContextFlags.EnableDebugSymbols);
+            context = new Context();
             context.EnableAlgorithms();
 
             if(forceCPU || CudaAccelerator.CudaAccelerators.Length < 1)
@@ -40,8 +43,11 @@ namespace NullEngine.Rendering.Implementation
         private void initRenderKernels()
         {
             InitPerPixelRngData = device.LoadAutoGroupedStreamKernel<Index1, dFrameData, ArrayView<ulong>>(GPUKernels.InitPerPixelRngData);
-            //GenerateRays = device.LoadAutoGroupedStreamKernel<Index1, Camera, dFrameData>(GPUKernels.GenerateRays);
-            //ColorRay = device.LoadAutoGroupedStreamKernel<Index1, Camera, dFrameData, dRenderData>(GPUKernels.ColorRay);
+            GenerateRays = device.LoadAutoGroupedStreamKernel<Index1, Camera, dFrameData>(GPUKernels.GenerateRays);
+            ColorRay = device.LoadAutoGroupedStreamKernel<Index1, Camera, dFrameData, dRenderData>(GPUKernels.ColorRay);
+            NormalizeLighting = device.LoadAutoGroupedStreamKernel<Index1, ArrayView<float>>(GPUKernels.NormalizeLighting);
+            CombineLightingAndColor = device.LoadAutoGroupedStreamKernel<Index1, dFrameData>(GPUKernels.CombineLightingAndColor);
+            DrawToBitmap = device.LoadAutoGroupedStreamKernel<Index1, Camera, ArrayView<float>, ArrayView<byte>>(GPUKernels.CreatBitmap);
         }
 
         public void Dispose()
@@ -69,6 +75,7 @@ namespace NullEngine.Rendering.Implementation
 
             MemoryBuffer<ulong> deviceSeedBuffer = device.Allocate(seeds);
             InitPerPixelRngData(frameData.rngBuffer.Length, frameData.deviceFrameData, deviceSeedBuffer);
+
             device.Synchronize();
             deviceSeedBuffer.Dispose();
         }
@@ -76,8 +83,14 @@ namespace NullEngine.Rendering.Implementation
         public void Render(ByteFrameBuffer output, Camera camera, RenderDataManager renderDataManager, FrameData frameData)
         {
             long outputLength = output.memoryBuffer.Length / 4;
-            //GenerateRays(outputLength, camera, frameData.deviceFrameData);
-            //ColorRay(outputLength, camera, frameData.deviceFrameData, renderDataManager.getDeviceRenderData());
+
+            GenerateRays(outputLength, camera, frameData.deviceFrameData);
+            ColorRay(outputLength, camera, frameData.deviceFrameData, renderDataManager.getDeviceRenderData());
+            NormalizeLighting(outputLength, frameData.lightBuffer);
+            CombineLightingAndColor(outputLength, frameData.deviceFrameData);
+            //TAA here
+            DrawToBitmap(outputLength, camera, frameData.colorBuffer, output.frameBuffer.frame);
+
             device.Synchronize();
         }
 
@@ -119,11 +132,14 @@ namespace NullEngine.Rendering.Implementation
 
         public static void GenerateRays(Index1 pixel, Camera camera, dFrameData frameData)
         {
-            int x = pixel % camera.width;
-            int y = pixel / camera.width;
+            int x = ((int)pixel) % camera.width;
+            int y = ((int)pixel) / camera.width;
 
-            //float casts required
-            frameData.rayBuffer[pixel] = camera.GetRay(((float)x) + frameData.rngBuffer[pixel].NextFloat(), ((float)y) + frameData.rngBuffer[pixel].NextFloat());
+            XorShift128Plus rng = frameData.rngBuffer[pixel];
+            float xJittered = x + rng.NextFloat();
+            float yJittered = y + rng.NextFloat();
+
+            frameData.rayBuffer[pixel] = camera.GetRay(xJittered, yJittered);
         }
 
         public static void ColorRay(Index1 pixel, Camera camera, dFrameData frameData, dRenderData renderData)
@@ -207,7 +223,55 @@ namespace NullEngine.Rendering.Implementation
             frameData.lightBuffer[bIndex] = lighting.z;
         }
 
-        public static void CreatBitmap(Index1 index, ArrayView<float> data, ArrayView<byte> bitmapData, Camera camera)
+        public static void NormalizeLighting(Index1 index, ArrayView<float> data)
+        {
+            int rIndex = (int)index * 3;
+            int gIndex = rIndex + 1;
+            int bIndex = rIndex + 2;
+
+            if (data[rIndex] != -1)
+            {
+                //Vec3 color = Vec3.reinhard(new Vec3(data[rIndex], data[gIndex], data[bIndex]));
+                Vec3 color = Vec3.aces_approx(new Vec3(data[rIndex], data[gIndex], data[bIndex]));
+
+                data[rIndex] = color.x;
+                data[gIndex] = color.y;
+                data[bIndex] = color.z;
+            }
+        }
+
+        public static void CombineLightingAndColor(Index1 index, dFrameData frameData)
+        {
+            int rIndex = (int)index * 3;
+            int gIndex = rIndex + 1;
+            int bIndex = rIndex + 2;
+
+            float minLight = 0.1f;
+
+            Vec3 col = new Vec3(frameData.colorBuffer[rIndex], frameData.colorBuffer[gIndex], frameData.colorBuffer[bIndex]);
+            Vec3 light = new Vec3(frameData.lightBuffer[rIndex], frameData.lightBuffer[gIndex], frameData.lightBuffer[bIndex]);
+
+            if (frameData.metaBuffer[index] == -2)
+            {
+                frameData.colorBuffer[rIndex] = col.x;
+                frameData.colorBuffer[gIndex] = col.y;
+                frameData.colorBuffer[bIndex] = col.z;
+            }
+            else if (frameData.metaBuffer[index] == -1 || light.x == -1)
+            {
+                frameData.colorBuffer[rIndex] = col.x * minLight;
+                frameData.colorBuffer[gIndex] = col.y * minLight;
+                frameData.colorBuffer[bIndex] = col.z * minLight;
+            }
+            else
+            {
+                frameData.colorBuffer[rIndex] = col.x * (light.x < minLight ? minLight : light.x);
+                frameData.colorBuffer[gIndex] = col.y * (light.y < minLight ? minLight : light.y);
+                frameData.colorBuffer[bIndex] = col.z * (light.z < minLight ? minLight : light.z);
+            }
+        }
+
+        public static void CreatBitmap(Index1 index, Camera camera, ArrayView<float> data, ArrayView<byte> bitmapData)
         {
             //FLIP Y
             //int x = (camera.width - 1) - ((index) % camera.width);
@@ -217,12 +281,13 @@ namespace NullEngine.Rendering.Implementation
             int x = (((int)index) % camera.width);
             //int y = ((index) / camera.width);
 
-            int newIndex = ((y * camera.width) + x) * 3;
+            int newIndex = ((y * camera.width) + x) * 4;
             int oldIndexStart = (int)index * 3;
 
             bitmapData[newIndex] = (byte)(255.99f * data[oldIndexStart]);
             bitmapData[newIndex + 1] = (byte)(255.99f * data[oldIndexStart + 1]);
             bitmapData[newIndex + 2] = (byte)(255.99f * data[oldIndexStart + 2]);
+            bitmapData[newIndex + 3] = 255;
         }
 
         public static void CreateGrayScaleBitmap(Index1 index, ArrayView<float> data, ArrayView<byte> bitmapData, Camera camera)

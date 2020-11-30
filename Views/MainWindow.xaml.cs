@@ -81,7 +81,7 @@ namespace NullEngine.Views
                 wBitmap.Dispose();
             }
 
-            wBitmap = new WriteableBitmap(new PixelSize(width, height), new Vector(96, 96), Avalonia.Platform.PixelFormat.Rgba8888);
+            wBitmap = new WriteableBitmap(new PixelSize(width, height), new Vector(96, 96), PixelFormat.Rgba8888);
             Frame.Source = wBitmap;
 
             if(renderer != null)

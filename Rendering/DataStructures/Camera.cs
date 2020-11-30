@@ -10,7 +10,6 @@ using System.Threading.Tasks;
 
 namespace NullEngine.Rendering.DataStructures
 {
-    [StructLayout(LayoutKind.Sequential, Pack = 0)]
     public struct Camera
     {
         public SpecializedValue<int> height;
@@ -113,6 +112,7 @@ namespace NullEngine.Rendering.DataStructures
 
         public Ray GetRay(float x, float y)
         {
+            //return new Ray(origin, origin - lookAt);
             return rayFromUnit(2f * (x * reciprocalWidth) - 1f, 2f * (y * reciprocalHeight) - 1f);
         }
     }
