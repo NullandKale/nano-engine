@@ -139,9 +139,8 @@ namespace NullEngine.Rendering.Implementation
             int x = ((int)pixel) % camera.width;
             int y = ((int)pixel) / camera.width;
 
-            XorShift128Plus rng = frameData.rngBuffer[pixel];
-            float xJittered = x + rng.NextFloat();
-            float yJittered = y + rng.NextFloat();
+            float xJittered = x + frameData.rngBuffer[pixel].NextFloat();
+            float yJittered = y + frameData.rngBuffer[pixel].NextFloat();
 
             frameData.rayBuffer[pixel] = camera.GetRay(xJittered, yJittered);
         }
@@ -181,7 +180,7 @@ namespace NullEngine.Rendering.Implementation
                         frameData.metaBuffer[pixel] = rec.drawableID;
                     }
 
-                    ScatterRecord sRec = Scatter(working, rec, rng, renderData.mats, minT);
+                    ScatterRecord sRec = Scatter(working, rec, ref rng, renderData.mats, minT);
                     if (sRec.materialID != -1)
                     {
                         attenuationHasValue = sRec.mirrorSkyLightingFix;
@@ -225,6 +224,8 @@ namespace NullEngine.Rendering.Implementation
             frameData.lightBuffer[rIndex] = lighting.x;
             frameData.lightBuffer[gIndex] = lighting.y;
             frameData.lightBuffer[bIndex] = lighting.z;
+
+            frameData.rngBuffer[pixel] = rng;
         }
 
         public static void NormalizeLighting(Index1 index, ArrayView<float> data)
@@ -316,7 +317,7 @@ namespace NullEngine.Rendering.Implementation
             bitmapData[(newIndex * 3) + 2] = (byte)(255.99f * data[(index)]);
         }
 
-        private static Vec3 RandomUnitVector(XorShift128Plus rng)
+        private static Vec3 RandomUnitVector(ref XorShift128Plus rng)
         {
             float a = 2f * XMath.PI * rng.NextFloat();
             float z = (rng.NextFloat() * 2f) - 1f;
@@ -473,7 +474,7 @@ namespace NullEngine.Rendering.Implementation
         }
 
 
-        private static ScatterRecord Scatter(Ray r, HitRecord rec, XorShift128Plus rng, ArrayView<MaterialData> materials, float minT)
+        private static ScatterRecord Scatter(Ray r, HitRecord rec, ref XorShift128Plus rng, ArrayView<MaterialData> materials, float minT)
         {
             MaterialData material = materials[rec.materialID];
             Ray ray;
@@ -485,7 +486,7 @@ namespace NullEngine.Rendering.Implementation
 
             if (material.type == 0) //Diffuse
             {
-                refracted = rec.p + rec.normal + RandomUnitVector(rng);
+                refracted = rec.p + rec.normal + RandomUnitVector(ref rng);
                 return new ScatterRecord(rec.materialID, new Ray(rec.p, refracted - rec.p), material.color, false);
             }
             else if (material.type == 1) // dielectric
@@ -531,7 +532,7 @@ namespace NullEngine.Rendering.Implementation
                 reflected = Vec3.reflect(rec.normal, r.b);
                 if (material.reflectionConeAngleRadians > minT)
                 {
-                    ray = new Ray(rec.p, reflected + (material.reflectionConeAngleRadians * RandomUnitVector(rng)));
+                    ray = new Ray(rec.p, reflected + (material.reflectionConeAngleRadians * RandomUnitVector(ref rng)));
                 }
                 else
                 {
