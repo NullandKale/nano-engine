@@ -37,24 +37,24 @@ namespace NullEngine.Rendering
         private RenderDataManager renderDataManager;
         private FrameData frameData;
 
-        public Renderer(MainWindow window, string sceneFileName, int targetFramerate, bool forceCPU)
+        public Renderer(MainWindow window, string sceneFileName, int targetFramerate, bool forceCPU, bool isLinux)
         {
             this.window = window;
             this.targetFramerate = targetFramerate;
 
-            gpu = new GPU(forceCPU);
+            gpu = new GPU(forceCPU, isLinux);
             renderDataManager = new RenderDataManager(gpu);
 
             int mat0 = renderDataManager.addMaterialForID(MaterialData.makeDiffuse(new Vec3(1.0, 0, 0)));
             int mat1 = renderDataManager.addMaterialForID(MaterialData.makeDiffuse(new Vec3(0, 1.0, 0)));
-            int mat2 = renderDataManager.addMaterialForID(MaterialData.makeDiffuse(new Vec3(0, 0, 1.00)));
+            int mat2 = renderDataManager.addMaterialForID(MaterialData.makeDiffuse(new Vec3(0, 0, 1.0)));
             int mat3 = renderDataManager.addMaterialForID(MaterialData.makeLight(new Vec3(10, 10, 10)));
             int mat4 = renderDataManager.addMaterialForID(MaterialData.makeDiffuse(new Vec3(1, 1, 1)));
-            renderDataManager.addSphereForID(new Sphere(new Vec3(0, -1, 0), 0.5f, mat0));
-            renderDataManager.addSphereForID(new Sphere(new Vec3(1, -1, 0), 0.5f, mat1));
-            renderDataManager.addSphereForID(new Sphere(new Vec3(-1, -1, 0), 0.5f, mat2));
-            renderDataManager.addSphereForID(new Sphere(new Vec3(-1, -10, 0), 0.5f, mat3));
-            renderDataManager.addSphereForID(new Sphere(new Vec3(-1, 50, 0), 50f, mat4));
+            renderDataManager.addSphereForID(new Sphere(new Vec3(0, 1, 0), 0.5f, mat0));
+            renderDataManager.addSphereForID(new Sphere(new Vec3(1, 1, 0), 0.5f, mat1));
+            renderDataManager.addSphereForID(new Sphere(new Vec3(-1, 1, 0), 0.5f, mat2));
+            renderDataManager.addSphereForID(new Sphere(new Vec3(-1, 10, 0), 0.5f, mat3));
+            renderDataManager.addSphereForID(new Sphere(new Vec3(-1, -50, 0), 50f, mat4));
 
             frameTimer = new FrameTimer();
 
@@ -78,7 +78,12 @@ namespace NullEngine.Rendering
             this.width = width;
             this.height = height;
             
-            camera = new Camera(new Vec3(0, -1, -5), new Vec3(0, -1, -4), Vec3.unitVector(new Vec3(0, 1, 0)), width, height, 3, 40f);
+            camera = new Camera(new Vec3(0, 1, -5), new Vec3(0, 1, -4), Vec3.unitVector(new Vec3(0, 1, 0)), width, height, 3, 40f);
+        }
+
+        public void CameraUpdate(Vec3 movement, Vec3 turn)
+        {
+            camera = new Camera(camera, movement, turn);
         }
 
         //eveything below this happens in the render thread

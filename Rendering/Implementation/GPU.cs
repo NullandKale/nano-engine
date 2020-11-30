@@ -17,14 +17,18 @@ namespace NullEngine.Rendering.Implementation
         public Context context;
         public Accelerator device;
 
+        private bool isLinux = false;
+
         private Action<Index1, dFrameData, ArrayView<ulong>> InitPerPixelRngData;
         private Action<Index1, Camera, dFrameData> GenerateRays;
         private Action<Index1, Camera, dFrameData, dRenderData> ColorRay;
         private Action<Index1, ArrayView<float>> NormalizeLighting;
         private Action<Index1, dFrameData> CombineLightingAndColor;
-        private Action<Index1, Camera, ArrayView<float>, ArrayView<byte>> DrawToBitmap;
-        public GPU(bool forceCPU)
+        private Action<Index1, Camera, ArrayView<float>, ArrayView<byte>, bool> DrawToBitmap;
+        public GPU(bool forceCPU, bool isLinux)
         {
+            this.isLinux = isLinux;
+
             context = new Context();
             context.EnableAlgorithms();
 
@@ -47,7 +51,7 @@ namespace NullEngine.Rendering.Implementation
             ColorRay = device.LoadAutoGroupedStreamKernel<Index1, Camera, dFrameData, dRenderData>(GPUKernels.ColorRay);
             NormalizeLighting = device.LoadAutoGroupedStreamKernel<Index1, ArrayView<float>>(GPUKernels.NormalizeLighting);
             CombineLightingAndColor = device.LoadAutoGroupedStreamKernel<Index1, dFrameData>(GPUKernels.CombineLightingAndColor);
-            DrawToBitmap = device.LoadAutoGroupedStreamKernel<Index1, Camera, ArrayView<float>, ArrayView<byte>>(GPUKernels.CreatBitmap);
+            DrawToBitmap = device.LoadAutoGroupedStreamKernel<Index1, Camera, ArrayView<float>, ArrayView<byte>, bool>(GPUKernels.DrawToBitmap);
         }
 
         public void Dispose()
@@ -89,7 +93,7 @@ namespace NullEngine.Rendering.Implementation
             NormalizeLighting(outputLength, frameData.lightBuffer);
             CombineLightingAndColor(outputLength, frameData.deviceFrameData);
             //TAA here
-            DrawToBitmap(outputLength, camera, frameData.colorBuffer, output.frameBuffer.frame);
+            DrawToBitmap(outputLength, camera, frameData.colorBuffer, output.frameBuffer.frame, isLinux);
 
             device.Synchronize();
         }
@@ -271,23 +275,28 @@ namespace NullEngine.Rendering.Implementation
             }
         }
 
-        public static void CreatBitmap(Index1 index, Camera camera, ArrayView<float> data, ArrayView<byte> bitmapData)
+        public static void DrawToBitmap(Index1 index, Camera camera, ArrayView<float> data, ArrayView<byte> bitmapData, bool isLinux)
         {
-            //FLIP Y
-            //int x = (camera.width - 1) - ((index) % camera.width);
-            int y = (camera.height - 1) - (((int)index) / camera.width);
-
-            //NORMAL X
             int x = (((int)index) % camera.width);
-            //int y = ((index) / camera.width);
+            int y = ((index) / camera.width);
 
             int newIndex = ((y * camera.width) + x) * 4;
             int oldIndexStart = (int)index * 3;
 
-            bitmapData[newIndex] = (byte)(255.99f * data[oldIndexStart]);
-            bitmapData[newIndex + 1] = (byte)(255.99f * data[oldIndexStart + 1]);
-            bitmapData[newIndex + 2] = (byte)(255.99f * data[oldIndexStart + 2]);
-            bitmapData[newIndex + 3] = 255;
+            if (isLinux)
+            {
+                bitmapData[newIndex] = (byte)(255.99f * data[oldIndexStart]);
+                bitmapData[newIndex + 1] = (byte)(255.99f * data[oldIndexStart + 1]);
+                bitmapData[newIndex + 2] = (byte)(255.99f * data[oldIndexStart + 2]);
+                bitmapData[newIndex + 3] = 255;
+            }
+            else
+            {
+                bitmapData[newIndex] = (byte)(255.99f * data[oldIndexStart]);
+                bitmapData[newIndex + 1] = (byte)(255.99f * data[oldIndexStart + 1]);
+                bitmapData[newIndex + 2] = (byte)(255.99f * data[oldIndexStart + 2]);
+                bitmapData[newIndex + 3] = 255;
+            }
         }
 
         public static void CreateGrayScaleBitmap(Index1 index, ArrayView<float> data, ArrayView<byte> bitmapData, Camera camera)

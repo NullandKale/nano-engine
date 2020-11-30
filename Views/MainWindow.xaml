@@ -6,7 +6,7 @@
         mc:Ignorable="d" Width="800" Height="400"
         x:Class="NullEngine.Views.MainWindow"
         Icon="/Assets/avalonia-logo.ico"
-        Title="NullEngine" >
+        Title="NullEngine">
 
     <Design.DataContext>
         <vm:MainWindowViewModel/>

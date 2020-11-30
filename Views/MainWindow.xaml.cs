@@ -5,6 +5,7 @@ using Avalonia.Media.Imaging;
 using Avalonia.Platform;
 using Avalonia.Threading;
 using NullEngine.Rendering;
+using NullEngine.Rendering.DataStructures;
 using System;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
@@ -15,6 +16,10 @@ namespace NullEngine.Views
     {
         public double scale = -4;
 
+        public bool hasInitialMousePos = false;
+        public float lastMouseX;
+        public float lastMouseY;
+
         public Action<int, int> onResolutionChanged;
         public int width;
         public int height;
@@ -24,6 +29,9 @@ namespace NullEngine.Views
         public double frameRate;
 
         private Image Frame;
+        public double FrameWidth;
+        public double FrameHeight;
+
         private TextBlock Info;
 
         public Renderer renderer;
@@ -41,7 +49,36 @@ namespace NullEngine.Views
             Info = this.FindControl<TextBlock>("Info");
             ClientSizeProperty.Changed.Subscribe(HandleResized);
             Closing += MainWindow_Closing;
+            Frame.PointerEnter += MainWindow_PointerEnter;
+            Frame.PointerMoved += MainWindow_PointerMoved;
             resize(ClientSize);
+        }
+
+        private void MainWindow_PointerMoved(object sender, Avalonia.Input.PointerEventArgs e)
+        {
+            Point p = e.GetPosition(Frame);
+
+            float x = (float)(p.X - (FrameWidth / 2));
+            float y = (float)(p.Y - (FrameHeight / 2));
+
+            if(hasInitialMousePos)
+            {
+                float xChange = lastMouseX - x;
+                float yChange = lastMouseY - y;
+
+                Vec3 strafe = new Vec3(-yChange, -xChange, 0) * 0.008f;
+                renderer.CameraUpdate(new Vec3(), strafe);
+            }
+
+            lastMouseX = x;
+            lastMouseY = y;
+            hasInitialMousePos = true;
+
+        }
+
+        private void MainWindow_PointerEnter(object sender, Avalonia.Input.PointerEventArgs e)
+        {
+            e.Pointer.Capture(Frame);
         }
 
         private void MainWindow_Closing(object sender, System.ComponentModel.CancelEventArgs e)
@@ -56,12 +93,15 @@ namespace NullEngine.Views
 
         private void InitRenderer()
         {
-            renderer = new Renderer(this, "", 60, false);
+            renderer = new Renderer(this, "", 60, false, Environment.OSVersion.Platform == PlatformID.Unix);
             renderer.Start();
         }
 
         public void resize(Size size)
         {
+            FrameWidth = size.Width;
+            FrameHeight = size.Height;
+
             width = (int)size.Width;
             height = (int)size.Height;
 
@@ -81,15 +121,7 @@ namespace NullEngine.Views
                 wBitmap.Dispose();
             }
 
-            if(Environment.OSVersion.Platform == PlatformID.Unix)
-            {
-                Console.WriteLine("platform == linux");
-                wBitmap = new WriteableBitmap(new PixelSize(width, height), new Vector(96, 96), PixelFormat.Rgba8888);
-            }
-            else
-            {
-                wBitmap = new WriteableBitmap(new PixelSize(width, height), new Vector(96, 96), PixelFormat.Rgba8888);
-            }
+            wBitmap = new WriteableBitmap(new PixelSize(width, height), new Vector(96, 96), PixelFormat.Rgba8888);
 
             Frame.Source = wBitmap;
 
