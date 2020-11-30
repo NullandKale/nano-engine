@@ -285,9 +285,9 @@ namespace NullEngine.Rendering.Implementation
 
             if (isLinux)
             {
-                bitmapData[newIndex] = (byte)(255.99f * data[oldIndexStart]);
+                bitmapData[newIndex] = (byte)(255.99f * data[oldIndexStart + 2]);
                 bitmapData[newIndex + 1] = (byte)(255.99f * data[oldIndexStart + 1]);
-                bitmapData[newIndex + 2] = (byte)(255.99f * data[oldIndexStart + 2]);
+                bitmapData[newIndex + 2] = (byte)(255.99f * data[oldIndexStart]);
                 bitmapData[newIndex + 3] = 255;
             }
             else

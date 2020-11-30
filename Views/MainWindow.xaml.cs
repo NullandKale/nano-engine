@@ -14,7 +14,7 @@ namespace NullEngine.Views
 {
     public class MainWindow : Window
     {
-        public double scale = -4;
+        public double scale = -2;
 
         public bool hasInitialMousePos = false;
         public float lastMouseX;
