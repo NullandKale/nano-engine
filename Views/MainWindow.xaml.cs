@@ -84,7 +84,7 @@ namespace NullEngine.Views
             if(Environment.OSVersion.Platform == PlatformID.Unix)
             {
                 Console.WriteLine("platform == linux");
-                wBitmap = new WriteableBitmap(new PixelSize(width, height), new Vector(96, 96), PixelFormat.Bgra8888);
+                wBitmap = new WriteableBitmap(new PixelSize(width, height), new Vector(96, 96), PixelFormat.Rgba8888);
             }
             else
             {
