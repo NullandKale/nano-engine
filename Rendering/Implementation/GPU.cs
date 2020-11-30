@@ -166,7 +166,7 @@ namespace NullEngine.Rendering.Implementation
                     }
 
                     float t = 0.5f * (working.b.y + 1.0f);
-                    attenuation *= (1.0f - t) * new Vec3(1.0f, 1.0f, 1.0f) + t * new Vec3(1.0f, 0.0f, 1.0f);
+                    attenuation *= (1.0f - t) * new Vec3(1.0f, 1.0f, 1.0f) + t * new Vec3(0.5f, 0.7f, 1.0f);
                     break;
                 }
                 else
