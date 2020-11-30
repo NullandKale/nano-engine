@@ -13,7 +13,7 @@
     </Design.DataContext>
 
   <Grid ColumnDefinitions="*" RowDefinitions="*">
-    <Image Name="Frame" Stretch="UniformToFill"  MinWidth="300" MinHeight="300" />
+    <Image Name="Frame" Stretch="UniformToFill"  MinWidth="300" MinHeight="300" RenderOptions.BitmapInterpolationMode="Default" />
     <TextBlock Name="Info" Foreground="White" Background="Black" HorizontalAlignment="Right" VerticalAlignment="Top"/>
   </Grid>
 </Window>
