@@ -16,6 +16,7 @@ namespace NullEngine.Views
     {
         public double scale = -2;
 
+        public bool isMouseActive = false;
         public bool hasInitialMousePos = false;
         public float lastMouseX;
         public float lastMouseY;
@@ -51,29 +52,81 @@ namespace NullEngine.Views
             Closing += MainWindow_Closing;
             Frame.PointerEnter += MainWindow_PointerEnter;
             Frame.PointerMoved += MainWindow_PointerMoved;
+            KeyDown += Frame_KeyDown;
             resize(ClientSize);
+        }
+
+        private void Frame_KeyDown(object sender, Avalonia.Input.KeyEventArgs e)
+        {
+            if (e.Key == Avalonia.Input.Key.E)
+            {
+                isMouseActive = !isMouseActive;
+                if(!isMouseActive)
+                {
+                    hasInitialMousePos = false;
+                }
+            }
+
+            Vec3 movement = new Vec3();
+            float speed = 0.1f;
+            bool moved = false;
+
+            if (e.Key == Avalonia.Input.Key.W)
+            {
+                movement += (renderer.camera.lookAt - renderer.camera.origin) * speed;
+                movement.y = 0;
+                moved = true;
+            }
+
+            if (e.Key == Avalonia.Input.Key.S)
+            {
+                movement -= (renderer.camera.lookAt - renderer.camera.origin) * speed;
+                movement.y = 0;
+                moved = true;
+            }
+
+            if (e.Key == Avalonia.Input.Key.D)
+            {
+                movement -= Vec3.cross(renderer.camera.up, renderer.camera.lookAt - renderer.camera.origin) * speed;
+                movement.y = 0;
+                moved = true;
+            }
+
+            if (e.Key == Avalonia.Input.Key.A)
+            {
+                movement += Vec3.cross(renderer.camera.up, renderer.camera.lookAt - renderer.camera.origin) * speed;
+                movement.y = 0;
+                moved = true;
+            }
+
+            if(moved)
+            {
+                renderer.CameraUpdate(movement, new Vec3());
+            }
         }
 
         private void MainWindow_PointerMoved(object sender, Avalonia.Input.PointerEventArgs e)
         {
-            Point p = e.GetPosition(Frame);
-
-            float x = (float)(p.X - (FrameWidth / 2));
-            float y = (float)(p.Y - (FrameHeight / 2));
-
-            if(hasInitialMousePos)
+            if(isMouseActive)
             {
-                float xChange = lastMouseX - x;
-                float yChange = lastMouseY - y;
+                Point p = e.GetPosition(Frame);
 
-                Vec3 strafe = new Vec3(-yChange, -xChange, 0) * 0.008f;
-                renderer.CameraUpdate(new Vec3(), strafe);
+                float x = (float)(p.X - (FrameWidth / 2));
+                float y = (float)(p.Y - (FrameHeight / 2));
+
+                if (hasInitialMousePos)
+                {
+                    float xChange = lastMouseX - x;
+                    float yChange = lastMouseY - y;
+
+                    Vec3 strafe = new Vec3(-yChange, -xChange, 0) * 0.008f;
+                    renderer.CameraUpdate(new Vec3(), strafe);
+                }
+
+                lastMouseX = x;
+                lastMouseY = y;
+                hasInitialMousePos = true;
             }
-
-            lastMouseX = x;
-            lastMouseY = y;
-            hasInitialMousePos = true;
-
         }
 
         private void MainWindow_PointerEnter(object sender, Avalonia.Input.PointerEventArgs e)

@@ -95,7 +95,7 @@ namespace NullEngine.Rendering.Implementation
             ColorRay(outputLength, camera, frameData.deviceFrameData, renderDataManager.getDeviceRenderData());
             NormalizeLighting(outputLength, frameData.lightBuffer);
             CombineLightingAndColor(outputLength, frameData.deviceFrameData);
-            TAA(outputLength, frameData.deviceFrameData, 0.45f, tick);
+            TAA(outputLength, frameData.deviceFrameData, 0.05f, tick);
             DrawToBitmap(outputLength, camera, frameData.TAABuffer, output.frameBuffer.frame, isLinux);
             
             tick++;
@@ -256,7 +256,8 @@ namespace NullEngine.Rendering.Implementation
             int gIndex = rIndex + 1;
             int bIndex = rIndex + 2;
 
-            float minLight = 0.1f;
+            float minLight = 0.01f;
+            float maxLight = 1f;
 
             Vec3 col = new Vec3(frameData.colorBuffer[rIndex], frameData.colorBuffer[gIndex], frameData.colorBuffer[bIndex]);
             Vec3 light = new Vec3(frameData.lightBuffer[rIndex], frameData.lightBuffer[gIndex], frameData.lightBuffer[bIndex]);
@@ -275,9 +276,18 @@ namespace NullEngine.Rendering.Implementation
             }
             else
             {
-                frameData.colorBuffer[rIndex] = col.x * (light.x < minLight ? minLight : light.x);
-                frameData.colorBuffer[gIndex] = col.y * (light.y < minLight ? minLight : light.y);
-                frameData.colorBuffer[bIndex] = col.z * (light.z < minLight ? minLight : light.z);
+                if(light.x > maxLight || light.y > maxLight || light.z > maxLight)
+                {
+                    frameData.colorBuffer[rIndex] = 1.0f;
+                    frameData.colorBuffer[gIndex] = 0.0f;
+                    frameData.colorBuffer[bIndex] = 1.0f;
+                }
+                else
+                {
+                    frameData.colorBuffer[rIndex] = col.x * (light.x < minLight ? minLight : light.x);
+                    frameData.colorBuffer[gIndex] = col.y * (light.y < minLight ? minLight : light.y);
+                    frameData.colorBuffer[bIndex] = col.z * (light.z < minLight ? minLight : light.z);
+                }
             }
         }
 
@@ -295,7 +305,7 @@ namespace NullEngine.Rendering.Implementation
             }
             else
             {
-                if (tick < 1 / exponent)
+                if ((float)tick < (1f / exponent))
                 {
                     frameData.TAABuffer[rIndex] = ((1.0f / tick) * frameData.colorBuffer[rIndex]) + ((1 - (1.0f / tick)) * frameData.TAABuffer[rIndex]);
                     frameData.TAABuffer[gIndex] = ((1.0f / tick) * frameData.colorBuffer[gIndex]) + ((1 - (1.0f / tick)) * frameData.TAABuffer[gIndex]);

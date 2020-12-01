@@ -33,7 +33,7 @@ namespace NullEngine.Rendering
         private byte[] frameBuffer = Array.Empty<byte>();
 
         private GPU gpu;
-        private Camera camera;
+        public Camera camera;
         private RenderDataManager renderDataManager;
         private FrameData frameData;
 
@@ -51,12 +51,12 @@ namespace NullEngine.Rendering
             int mat3 = renderDataManager.addMaterialForID(MaterialData.makeLight(new Vec3(10, 10, 10)));
             int mat4 = renderDataManager.addMaterialForID(MaterialData.makeDiffuse(new Vec3(1, 1, 1)));
             int mat5 = renderDataManager.addMaterialForID(MaterialData.makeMirror(new Vec3(1, 1, 1)));
-            int mat6 = renderDataManager.addMaterialForID(MaterialData.makeMirror(new Vec3(1, 1, 1), 0.999f));
+            int mat6 = renderDataManager.addMaterialForID(MaterialData.makeMirror(new Vec3(1, 1, 1)));
 
             renderDataManager.addSphereForID(new Sphere(new Vec3(0, 1, 0), 0.5f, mat0));
             renderDataManager.addSphereForID(new Sphere(new Vec3(1, 1, 0), 0.5f, mat1));
             renderDataManager.addSphereForID(new Sphere(new Vec3(-1, 1, 0), 0.5f, mat2));
-            renderDataManager.addSphereForID(new Sphere(new Vec3(-1, 10, 0), 0.5f, mat3));
+            renderDataManager.addSphereForID(new Sphere(new Vec3(-1, 10, -5), 0.5f, mat3));
             renderDataManager.addSphereForID(new Sphere(new Vec3(-1, -50, 0), 50f, mat4));
             renderDataManager.addSphereForID(new Sphere(new Vec3(2.5, 1, 0), 1f, mat5));
             renderDataManager.addSphereForID(new Sphere(new Vec3(-2.5, 1, 0), 1f, mat6));
