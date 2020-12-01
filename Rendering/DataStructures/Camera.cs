@@ -28,8 +28,11 @@ namespace NullEngine.Rendering.DataStructures
         public float reciprocalHeight;
         public float reciprocalWidth;
 
+        public int mode;
+
         public Camera(Camera camera, Vec3 movement, Vec3 turn)
         {
+            mode = camera.mode;
             this.width = camera.width;
             this.height = camera.height;
             this.maxBounces = camera.maxBounces;
@@ -62,6 +65,7 @@ namespace NullEngine.Rendering.DataStructures
 
         public Camera(Camera camera, int width, int height, float verticalFov)
         {
+            mode = camera.mode;
             this.width = new SpecializedValue<int>(width);
             this.height = new SpecializedValue<int>(height);
             this.maxBounces = camera.maxBounces;
@@ -82,6 +86,7 @@ namespace NullEngine.Rendering.DataStructures
 
         public Camera(Vec3 origin, Vec3 lookAt, Vec3 up, int width, int height, int maxBounces, float verticalFov)
         {
+            mode = 0;
             this.width = new SpecializedValue<int>(width);
             this.height = new SpecializedValue<int>(height);
             this.maxBounces = new SpecializedValue<int>(maxBounces);

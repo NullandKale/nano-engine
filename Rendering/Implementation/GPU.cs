@@ -24,7 +24,7 @@ namespace NullEngine.Rendering.Implementation
         private Action<Index1, Camera, dFrameData> GenerateRays;
         private Action<Index1, Camera, dFrameData, dRenderData> ColorRay;
         private Action<Index1, ArrayView<float>> NormalizeLighting;
-        private Action<Index1, dFrameData> CombineLightingAndColor;
+        private Action<Index1, dFrameData, int> CombineLightingAndColor;
         private Action<Index1, dFrameData, float, int> TAA;
         private Action<Index1, Camera, ArrayView<float>, ArrayView<byte>, bool> DrawToBitmap;
         public GPU(bool forceCPU, bool isLinux)
@@ -52,7 +52,7 @@ namespace NullEngine.Rendering.Implementation
             GenerateRays = device.LoadAutoGroupedStreamKernel<Index1, Camera, dFrameData>(GPUKernels.GenerateRays);
             ColorRay = device.LoadAutoGroupedStreamKernel<Index1, Camera, dFrameData, dRenderData>(GPUKernels.ColorRay);
             NormalizeLighting = device.LoadAutoGroupedStreamKernel<Index1, ArrayView<float>>(GPUKernels.NormalizeLighting);
-            CombineLightingAndColor = device.LoadAutoGroupedStreamKernel<Index1, dFrameData>(GPUKernels.CombineLightingAndColor);
+            CombineLightingAndColor = device.LoadAutoGroupedStreamKernel<Index1, dFrameData, int>(GPUKernels.CombineLightingAndColor);
             TAA = device.LoadAutoGroupedStreamKernel<Index1, dFrameData, float, int>(GPUKernels.NULLTAA);
             DrawToBitmap = device.LoadAutoGroupedStreamKernel<Index1, Camera, ArrayView<float>, ArrayView<byte>, bool>(GPUKernels.DrawToBitmap);
         }
@@ -94,8 +94,8 @@ namespace NullEngine.Rendering.Implementation
             GenerateRays(outputLength, camera, frameData.deviceFrameData);
             ColorRay(outputLength, camera, frameData.deviceFrameData, renderDataManager.getDeviceRenderData());
             NormalizeLighting(outputLength, frameData.lightBuffer);
-            CombineLightingAndColor(outputLength, frameData.deviceFrameData);
-            TAA(outputLength, frameData.deviceFrameData, 0.05f, tick);
+            CombineLightingAndColor(outputLength, frameData.deviceFrameData, camera.mode);
+            TAA(outputLength, frameData.deviceFrameData, 0.25f, tick);
             DrawToBitmap(outputLength, camera, frameData.TAABuffer, output.frameBuffer.frame, isLinux);
             
             tick++;
@@ -250,44 +250,55 @@ namespace NullEngine.Rendering.Implementation
             }
         }
 
-        public static void CombineLightingAndColor(Index1 index, dFrameData frameData)
+        public static void CombineLightingAndColor(Index1 index, dFrameData frameData, int mode)
         {
             int rIndex = (int)index * 3;
             int gIndex = rIndex + 1;
             int bIndex = rIndex + 2;
 
-            float minLight = 0.01f;
-            float maxLight = 1f;
+            float minLight = 0.001f;
 
             Vec3 col = new Vec3(frameData.colorBuffer[rIndex], frameData.colorBuffer[gIndex], frameData.colorBuffer[bIndex]);
             Vec3 light = new Vec3(frameData.lightBuffer[rIndex], frameData.lightBuffer[gIndex], frameData.lightBuffer[bIndex]);
 
-            if (frameData.metaBuffer[index] == -2)
+            switch (mode)
             {
-                frameData.colorBuffer[rIndex] = col.x;
-                frameData.colorBuffer[gIndex] = col.y;
-                frameData.colorBuffer[bIndex] = col.z;
-            }
-            else if (frameData.metaBuffer[index] == -1 || light.x == -1)
-            {
-                frameData.colorBuffer[rIndex] = col.x * minLight;
-                frameData.colorBuffer[gIndex] = col.y * minLight;
-                frameData.colorBuffer[bIndex] = col.z * minLight;
-            }
-            else
-            {
-                if(light.x > maxLight || light.y > maxLight || light.z > maxLight)
-                {
-                    frameData.colorBuffer[rIndex] = 1.0f;
-                    frameData.colorBuffer[gIndex] = 0.0f;
-                    frameData.colorBuffer[bIndex] = 1.0f;
-                }
-                else
-                {
-                    frameData.colorBuffer[rIndex] = col.x * (light.x < minLight ? minLight : light.x);
-                    frameData.colorBuffer[gIndex] = col.y * (light.y < minLight ? minLight : light.y);
-                    frameData.colorBuffer[bIndex] = col.z * (light.z < minLight ? minLight : light.z);
-                }
+                case 0:
+                    {
+                        if (frameData.metaBuffer[index] == -2)
+                        {
+                            frameData.colorBuffer[rIndex] = col.x;
+                            frameData.colorBuffer[gIndex] = col.y;
+                            frameData.colorBuffer[bIndex] = col.z;
+                        }
+                        else if (frameData.metaBuffer[index] == -1 || light.x == -1)
+                        {
+                            frameData.colorBuffer[rIndex] = col.x * minLight;
+                            frameData.colorBuffer[gIndex] = col.y * minLight;
+                            frameData.colorBuffer[bIndex] = col.z * minLight;
+                        }
+                        else
+                        {
+                            frameData.colorBuffer[rIndex] = col.x * (light.x < minLight ? minLight : light.x);
+                            frameData.colorBuffer[gIndex] = col.y * (light.y < minLight ? minLight : light.y);
+                            frameData.colorBuffer[bIndex] = col.z * (light.z < minLight ? minLight : light.z);
+                        }
+                        return;
+                    }
+                case 1:
+                    {
+                        frameData.colorBuffer[rIndex] = col.x;
+                        frameData.colorBuffer[gIndex] = col.y;
+                        frameData.colorBuffer[bIndex] = col.z;
+                        return;
+                    }
+                case 2:
+                    {
+                        frameData.colorBuffer[rIndex] = (light.x < minLight ? minLight : light.x);
+                        frameData.colorBuffer[gIndex] = (light.y < minLight ? minLight : light.y);
+                        frameData.colorBuffer[bIndex] = (light.z < minLight ? minLight : light.z);
+                        return;
+                    }
             }
         }
 

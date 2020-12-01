@@ -99,7 +99,22 @@ namespace NullEngine.Views
                 moved = true;
             }
 
-            if(moved)
+            if(e.Key == Avalonia.Input.Key.D1)
+            {
+                renderer.camera.mode = 0;
+            }
+
+            if (e.Key == Avalonia.Input.Key.D2)
+            {
+                renderer.camera.mode = 1;
+            }
+
+            if (e.Key == Avalonia.Input.Key.D3)
+            {
+                renderer.camera.mode = 2;
+            }
+
+            if (moved)
             {
                 renderer.CameraUpdate(movement, new Vec3());
             }
