@@ -14,6 +14,7 @@ namespace NullEngine.Rendering.DataStructures
         public int height;
 
         public MemoryBuffer<float> colorBuffer;
+        public MemoryBuffer<float> TAABuffer;
         public MemoryBuffer<float> lightBuffer;
         public MemoryBuffer<float> depthBuffer;
         public MemoryBuffer<float> outputBuffer;
@@ -30,6 +31,7 @@ namespace NullEngine.Rendering.DataStructures
             this.height = height;
 
             colorBuffer = device.Allocate<float>(width * height * 3);
+            TAABuffer = device.Allocate<float>(width * height * 3);
             lightBuffer = device.Allocate<float>(width * height * 3);
             depthBuffer = device.Allocate<float>(width * height * 3);
             outputBuffer = device.Allocate<float>(width * height * 4);
@@ -44,6 +46,7 @@ namespace NullEngine.Rendering.DataStructures
         public void Dispose()
         {
             colorBuffer.Dispose();
+            TAABuffer.Dispose();
             lightBuffer.Dispose();
             depthBuffer.Dispose();
             outputBuffer.Dispose();
@@ -58,6 +61,7 @@ namespace NullEngine.Rendering.DataStructures
         public int width;
         public int height;
         public ArrayView<float> colorBuffer;
+        public ArrayView<float> TAABuffer;
         public ArrayView<float> lightBuffer;
         public ArrayView<float> depthBuffer;
         public ArrayView<Ray> rayBuffer;
@@ -70,6 +74,7 @@ namespace NullEngine.Rendering.DataStructures
             width = frameData.width;
             height = frameData.height;
             colorBuffer = frameData.colorBuffer;
+            TAABuffer = frameData.TAABuffer;
             lightBuffer = frameData.lightBuffer;
             depthBuffer = frameData.depthBuffer;
             rayBuffer = frameData.rayBuffer;

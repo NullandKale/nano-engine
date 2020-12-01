@@ -18,12 +18,14 @@ namespace NullEngine.Rendering.Implementation
         public Accelerator device;
 
         private bool isLinux = false;
+        private int tick = 0;
 
         private Action<Index1, dFrameData, ArrayView<ulong>> InitPerPixelRngData;
         private Action<Index1, Camera, dFrameData> GenerateRays;
         private Action<Index1, Camera, dFrameData, dRenderData> ColorRay;
         private Action<Index1, ArrayView<float>> NormalizeLighting;
         private Action<Index1, dFrameData> CombineLightingAndColor;
+        private Action<Index1, dFrameData, float, int> TAA;
         private Action<Index1, Camera, ArrayView<float>, ArrayView<byte>, bool> DrawToBitmap;
         public GPU(bool forceCPU, bool isLinux)
         {
@@ -51,6 +53,7 @@ namespace NullEngine.Rendering.Implementation
             ColorRay = device.LoadAutoGroupedStreamKernel<Index1, Camera, dFrameData, dRenderData>(GPUKernels.ColorRay);
             NormalizeLighting = device.LoadAutoGroupedStreamKernel<Index1, ArrayView<float>>(GPUKernels.NormalizeLighting);
             CombineLightingAndColor = device.LoadAutoGroupedStreamKernel<Index1, dFrameData>(GPUKernels.CombineLightingAndColor);
+            TAA = device.LoadAutoGroupedStreamKernel<Index1, dFrameData, float, int>(GPUKernels.NULLTAA);
             DrawToBitmap = device.LoadAutoGroupedStreamKernel<Index1, Camera, ArrayView<float>, ArrayView<byte>, bool>(GPUKernels.DrawToBitmap);
         }
 
@@ -92,8 +95,10 @@ namespace NullEngine.Rendering.Implementation
             ColorRay(outputLength, camera, frameData.deviceFrameData, renderDataManager.getDeviceRenderData());
             NormalizeLighting(outputLength, frameData.lightBuffer);
             CombineLightingAndColor(outputLength, frameData.deviceFrameData);
-            //TAA here
-            DrawToBitmap(outputLength, camera, frameData.colorBuffer, output.frameBuffer.frame, isLinux);
+            TAA(outputLength, frameData.deviceFrameData, 0.45f, tick);
+            DrawToBitmap(outputLength, camera, frameData.TAABuffer, output.frameBuffer.frame, isLinux);
+            
+            tick++;
 
             device.Synchronize();
         }
@@ -273,6 +278,35 @@ namespace NullEngine.Rendering.Implementation
                 frameData.colorBuffer[rIndex] = col.x * (light.x < minLight ? minLight : light.x);
                 frameData.colorBuffer[gIndex] = col.y * (light.y < minLight ? minLight : light.y);
                 frameData.colorBuffer[bIndex] = col.z * (light.z < minLight ? minLight : light.z);
+            }
+        }
+
+        public static void NULLTAA(Index1 index, dFrameData frameData, float exponent, int tick)
+        {
+            int rIndex = (int)index * 3;
+            int gIndex = rIndex + 1;
+            int bIndex = gIndex + 1;
+
+            if (tick == 0)
+            {
+                frameData.TAABuffer[rIndex] = frameData.colorBuffer[rIndex];
+                frameData.TAABuffer[gIndex] = frameData.colorBuffer[gIndex];
+                frameData.TAABuffer[bIndex] = frameData.colorBuffer[bIndex];
+            }
+            else
+            {
+                if (tick < 1 / exponent)
+                {
+                    frameData.TAABuffer[rIndex] = ((1.0f / tick) * frameData.colorBuffer[rIndex]) + ((1 - (1.0f / tick)) * frameData.TAABuffer[rIndex]);
+                    frameData.TAABuffer[gIndex] = ((1.0f / tick) * frameData.colorBuffer[gIndex]) + ((1 - (1.0f / tick)) * frameData.TAABuffer[gIndex]);
+                    frameData.TAABuffer[bIndex] = ((1.0f / tick) * frameData.colorBuffer[bIndex]) + ((1 - (1.0f / tick)) * frameData.TAABuffer[bIndex]);
+                }
+                else
+                {
+                    frameData.TAABuffer[rIndex] = (exponent * frameData.colorBuffer[rIndex]) + ((1 - exponent) * frameData.TAABuffer[rIndex]);
+                    frameData.TAABuffer[gIndex] = (exponent * frameData.colorBuffer[gIndex]) + ((1 - exponent) * frameData.TAABuffer[gIndex]);
+                    frameData.TAABuffer[bIndex] = (exponent * frameData.colorBuffer[bIndex]) + ((1 - exponent) * frameData.TAABuffer[bIndex]);
+                }
             }
         }
 
