@@ -144,13 +144,15 @@ namespace NullEngine.Views
 
                     Point center = e.GetPosition(null);
 
+                    Trace.WriteLine("change : " + xChange + " " + yChange);
+                    Trace.WriteLine("mouse : " + center);
+
                     if ((center.X < 0 || center.X >= ClientSize.Width) || (center.Y < 0 || center.Y >= ClientSize.Height))
                     {
                         int xToSet = (int)(Position.X + (ClientSize.Width / 2.0));
                         int yToSet = (int)(Position.Y + (ClientSize.Height / 2.0));
 
                         Trace.WriteLine("To set : " + xToSet + " " + yToSet);
-                        Trace.WriteLine("mouse : " + center);
 
                         MouseUtils.SetMousePos(xToSet, yToSet);
                         hasInitialMousePos = false;
