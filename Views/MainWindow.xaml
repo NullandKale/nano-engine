@@ -15,5 +15,6 @@
   <Grid ColumnDefinitions="*" RowDefinitions="*">
     <Image Name="Frame" Stretch="UniformToFill"  MinWidth="300" MinHeight="300" RenderOptions.BitmapInterpolationMode="Default" />
     <TextBlock Name="Info" Foreground="White" Background="Black" HorizontalAlignment="Right" VerticalAlignment="Top"/>
+    <TextBlock Name="Instructions" Text="WASD to move | E to toggle mouse rotation | 1 2 3 to change render mode" Foreground="White" Background="Black" HorizontalAlignment="Left" VerticalAlignment="Top"/>
   </Grid>
 </Window>

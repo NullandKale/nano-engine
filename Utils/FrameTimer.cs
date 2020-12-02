@@ -6,7 +6,7 @@ using System.Threading;
 
 namespace NullEngine.Utils
 {
-    class FrameTimer
+    public class FrameTimer
     {
         public double lastFrameTimeMS;
         public double lastFrameUpdateRate;

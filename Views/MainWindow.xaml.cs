@@ -18,6 +18,7 @@ namespace NullEngine.Views
         public double scale = -2;
 
         public bool isMouseActive = false;
+        public int skipNextMouseEvent = 0;
         public bool hasInitialMousePos = false;
         public float lastMouseX;
         public float lastMouseY;
@@ -125,21 +126,34 @@ namespace NullEngine.Views
         {
             if(isMouseActive)
             {
-                Point p = e.GetPosition(Frame);
+                Point p = e.GetPosition(this);
 
-                float x = (float)(p.X - (FrameWidth / 2));
-                float y = (float)(p.Y - (FrameHeight / 2));
+                float x = (float)(p.X - (Position.X + (FrameWidth / 2.0)));
+                float y = (float)(p.Y - (Position.Y + (FrameHeight / 2.0)));
 
                 if (hasInitialMousePos)
                 {
-                    float xChange = lastMouseX - x;
-                    float yChange = lastMouseY - y;
+                    float xChange = x - lastMouseX;
+                    float yChange = y - lastMouseY;
 
-                    Vec3 strafe = new Vec3(-yChange, -xChange, 0) * 0.008f;
-                    renderer.CameraUpdate(new Vec3(), strafe);
+                    if(Math.Abs(xChange) < 20 && Math.Abs(yChange) < 20)
+                    {
+                        Vec3 strafe = new Vec3(yChange, xChange, 0) * 0.008f;
+                        renderer.CameraUpdate(new Vec3(), strafe);
+                    }
+
+                    Point center = e.GetPosition(null);
+
+                    if ((center.X < 0 || center.X >= ClientSize.Width) || (center.Y < 0 || center.Y >= ClientSize.Height))
+                    {
+                        int xToSet = (int)(Position.X + (ClientSize.Width / 2.0));
+                        int yToSet = (int)(Position.Y + (ClientSize.Height / 2.0));
+
+                        MouseUtils.SetMousePos(xToSet, yToSet);
+                        hasInitialMousePos = false;
+                        return;
+                    }
                 }
-
-                MouseUtils.SetCursorPos((int)(ClientSize.Width / 2.0) + Position.X, (int)(ClientSize.Height / 2.0) + Position.Y);
 
                 lastMouseX = x;
                 lastMouseY = y;
@@ -214,7 +228,7 @@ namespace NullEngine.Views
                 //HACK must manually call invalidate on the Image control that displays the writeable bitmap
                 Frame.InvalidateVisual();
 
-                Info.Text = (int)frameRate + " MS";
+                Info.Text =   (int)renderer.frameTimer.lastFrameUpdateRate + " FPS " + (int)frameRate + " MS";
             }
             else
             {

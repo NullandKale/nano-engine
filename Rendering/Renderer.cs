@@ -27,7 +27,7 @@ namespace NullEngine.Rendering
 
         private MainWindow window;
         private Thread renderThread;
-        private FrameTimer frameTimer;
+        public FrameTimer frameTimer;
 
         private ByteFrameBuffer deviceFrameBuffer;
         private byte[] frameBuffer = Array.Empty<byte>();
