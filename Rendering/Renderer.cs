@@ -37,6 +37,8 @@ namespace NullEngine.Rendering
         private RenderDataManager renderDataManager;
         private FrameData frameData;
 
+        private int lastCameraMovementTick = 0;
+
         public Renderer(MainWindow window, string sceneFileName, int targetFramerate, bool forceCPU, bool isLinux)
         {
             this.window = window;
@@ -48,7 +50,7 @@ namespace NullEngine.Rendering
             int mat0 = renderDataManager.addMaterialForID(MaterialData.makeDiffuse(new Vec3(1.0, 0, 0)));
             int mat1 = renderDataManager.addMaterialForID(MaterialData.makeDiffuse(new Vec3(0, 1.0, 0)));
             int mat2 = renderDataManager.addMaterialForID(MaterialData.makeDiffuse(new Vec3(0, 0, 1.0)));
-            int mat3 = renderDataManager.addMaterialForID(MaterialData.makeLight(new Vec3(10, 10, 10)));
+            int mat3 = renderDataManager.addMaterialForID(MaterialData.makeLight(new Vec3(1, 1, 1)));
             int mat4 = renderDataManager.addMaterialForID(MaterialData.makeDiffuse(new Vec3(1, 1, 1)));
             int mat5 = renderDataManager.addMaterialForID(MaterialData.makeMirror(new Vec3(1, 1, 1)));
             int mat6 = renderDataManager.addMaterialForID(MaterialData.makeMirror(new Vec3(1, 1, 1)));
@@ -86,9 +88,16 @@ namespace NullEngine.Rendering
             camera = new Camera(new Vec3(0, 1, -5), new Vec3(0, 1, -4), Vec3.unitVector(new Vec3(0, 1, 0)), width, height, 3, 40f);
         }
 
+        public void CameraModeUpdate(int mode)
+        {
+            camera.mode = mode;
+            lastCameraMovementTick = gpu.tick;
+        }
+
         public void CameraUpdate(Vec3 movement, Vec3 turn)
         {
             camera = new Camera(camera, movement, turn);
+            lastCameraMovementTick = gpu.tick;
         }
 
         //eveything below this happens in the render thread
@@ -146,7 +155,7 @@ namespace NullEngine.Rendering
         {
             if (deviceFrameBuffer != null && !deviceFrameBuffer.isDisposed)
             {
-                gpu.Render(deviceFrameBuffer, camera, renderDataManager, frameData);
+                gpu.Render(deviceFrameBuffer, camera, renderDataManager, frameData, gpu.tick - lastCameraMovementTick);
                 deviceFrameBuffer.memoryBuffer.CopyTo(frameBuffer, 0, 0, frameBuffer.Length);
             }
         }

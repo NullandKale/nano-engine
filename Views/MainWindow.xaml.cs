@@ -101,17 +101,17 @@ namespace NullEngine.Views
 
             if(e.Key == Avalonia.Input.Key.D1)
             {
-                renderer.camera.mode = 0;
+                renderer.CameraModeUpdate(0);
             }
 
             if (e.Key == Avalonia.Input.Key.D2)
             {
-                renderer.camera.mode = 1;
+                renderer.CameraModeUpdate(1);
             }
 
             if (e.Key == Avalonia.Input.Key.D3)
             {
-                renderer.camera.mode = 2;
+                renderer.CameraModeUpdate(2);
             }
 
             if (moved)

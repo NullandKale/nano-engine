@@ -88,6 +88,10 @@ namespace NullEngine.Rendering.DataStructures
             return XMath.Sqrt(dx * dx + dy * dy + dz * dz);
         }
 
+        public static Vec3 fract(Vec3 v1)
+        {
+            return new Vec3(v1.x - XMath.Floor(v1.x), v1.y - XMath.Floor(v1.y), v1.z - XMath.Floor(v1.z));
+        }
 
         public static Vec3 operator +(Vec3 v1, Vec3 v2)
         {

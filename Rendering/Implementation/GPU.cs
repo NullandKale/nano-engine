@@ -18,14 +18,14 @@ namespace NullEngine.Rendering.Implementation
         public Accelerator device;
 
         private bool isLinux = false;
-        private int tick = 0;
+        public int tick = 0;
 
         private Action<Index1, dFrameData, ArrayView<ulong>> InitPerPixelRngData;
         private Action<Index1, Camera, dFrameData> GenerateRays;
         private Action<Index1, Camera, dFrameData, dRenderData> ColorRay;
         private Action<Index1, ArrayView<float>> NormalizeLighting;
         private Action<Index1, dFrameData, int> CombineLightingAndColor;
-        private Action<Index1, dFrameData, float, int> TAA;
+        private Action<Index1, dFrameData, float, int, int> TAA;
         private Action<Index1, Camera, ArrayView<float>, ArrayView<byte>, bool> DrawToBitmap;
         public GPU(bool forceCPU, bool isLinux)
         {
@@ -53,7 +53,7 @@ namespace NullEngine.Rendering.Implementation
             ColorRay = device.LoadAutoGroupedStreamKernel<Index1, Camera, dFrameData, dRenderData>(GPUKernels.ColorRay);
             NormalizeLighting = device.LoadAutoGroupedStreamKernel<Index1, ArrayView<float>>(GPUKernels.NormalizeLighting);
             CombineLightingAndColor = device.LoadAutoGroupedStreamKernel<Index1, dFrameData, int>(GPUKernels.CombineLightingAndColor);
-            TAA = device.LoadAutoGroupedStreamKernel<Index1, dFrameData, float, int>(GPUKernels.NULLTAA);
+            TAA = device.LoadAutoGroupedStreamKernel<Index1, dFrameData, float, int, int>(GPUKernels.NULLTAA);
             DrawToBitmap = device.LoadAutoGroupedStreamKernel<Index1, Camera, ArrayView<float>, ArrayView<byte>, bool>(GPUKernels.DrawToBitmap);
         }
 
@@ -87,7 +87,7 @@ namespace NullEngine.Rendering.Implementation
             deviceSeedBuffer.Dispose();
         }
 
-        public void Render(ByteFrameBuffer output, Camera camera, RenderDataManager renderDataManager, FrameData frameData)
+        public void Render(ByteFrameBuffer output, Camera camera, RenderDataManager renderDataManager, FrameData frameData, int ticksSinceCameraMovement)
         {
             long outputLength = output.memoryBuffer.Length / 4;
 
@@ -95,7 +95,7 @@ namespace NullEngine.Rendering.Implementation
             ColorRay(outputLength, camera, frameData.deviceFrameData, renderDataManager.getDeviceRenderData());
             NormalizeLighting(outputLength, frameData.lightBuffer);
             CombineLightingAndColor(outputLength, frameData.deviceFrameData, camera.mode);
-            TAA(outputLength, frameData.deviceFrameData, 0.25f, tick);
+            TAA(outputLength, frameData.deviceFrameData, 0.45f, tick, ticksSinceCameraMovement);
             DrawToBitmap(outputLength, camera, frameData.TAABuffer, output.frameBuffer.frame, isLinux);
             
             tick++;
@@ -302,7 +302,7 @@ namespace NullEngine.Rendering.Implementation
             }
         }
 
-        public static void NULLTAA(Index1 index, dFrameData frameData, float exponent, int tick)
+        public static void NULLTAA(Index1 index, dFrameData frameData, float exponent, int tick, int ticksSinceCameraMovement)
         {
             int rIndex = (int)index * 3;
             int gIndex = rIndex + 1;
@@ -324,6 +324,11 @@ namespace NullEngine.Rendering.Implementation
                 }
                 else
                 {
+                    if(ticksSinceCameraMovement != 0)
+                    {
+                        exponent = exponent / ticksSinceCameraMovement;
+                    }
+
                     frameData.TAABuffer[rIndex] = (exponent * frameData.colorBuffer[rIndex]) + ((1 - exponent) * frameData.TAABuffer[rIndex]);
                     frameData.TAABuffer[gIndex] = (exponent * frameData.colorBuffer[gIndex]) + ((1 - exponent) * frameData.TAABuffer[gIndex]);
                     frameData.TAABuffer[bIndex] = (exponent * frameData.colorBuffer[bIndex]) + ((1 - exponent) * frameData.TAABuffer[bIndex]);
