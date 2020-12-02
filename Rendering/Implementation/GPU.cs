@@ -95,7 +95,7 @@ namespace NullEngine.Rendering.Implementation
             ColorRay(outputLength, camera, frameData.deviceFrameData, renderDataManager.getDeviceRenderData());
             NormalizeLighting(outputLength, frameData.lightBuffer);
             CombineLightingAndColor(outputLength, frameData.deviceFrameData, camera.mode);
-            TAA(outputLength, frameData.deviceFrameData, 0.45f, tick, ticksSinceCameraMovement);
+            TAA(outputLength, frameData.deviceFrameData, 0.65f, tick, ticksSinceCameraMovement);
             DrawToBitmap(outputLength, camera, frameData.TAABuffer, output.frameBuffer.frame, isLinux);
             
             tick++;
