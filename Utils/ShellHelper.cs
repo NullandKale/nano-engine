@@ -6,6 +6,8 @@ public static class ShellHelper
     {
         var escapedArgs = cmd.Replace("\"", "\\\"");
 
+        Trace.WriteLine(cmd);
+
         var process = new Process()
         {
             StartInfo = new ProcessStartInfo
