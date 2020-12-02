@@ -205,7 +205,7 @@ namespace NullEngine.Rendering.Implementation
                     Vec3 lightDir = s.center - rec.p;
                     HitRecord shadowRec = GetWorldHit(renderData, new Ray(rec.p, lightDir), renderData, minT);
 
-                    if (shadowRec.materialID != -1 && (shadowRec.p - rec.p).length() > lightDir.length() - (s.radius * 1.1f)) // the second part of this IF could probably be much more efficent
+                    if (shadowRec.materialID != -1 && (shadowRec.p - rec.p).length() > lightDir.length() - (s.radius * 2f)) // the second part of this IF could probably be much more efficent
                     {
                         MaterialData material = renderData.mats[shadowRec.materialID];
                         if (material.type != 1)
@@ -608,11 +608,11 @@ namespace NullEngine.Rendering.Implementation
                     return new ScatterRecord(rec.materialID, ray, material.color, true);
                 }
             }
-            else if (material.type == 3) //Lights
-            {
-                refracted = rec.p + rec.normal;
-                //return new ScatterRecord(rec.materialID, new Ray(rec.p, refracted - rec.p), material.color, false);
-            }
+            //else if (material.type == 3) //Lights
+            //{
+            //    //refracted = rec.p + rec.normal;
+            //    //return new ScatterRecord(rec.materialID, new Ray(rec.p, refracted - rec.p), material.color, false);
+            //}
 
             return new ScatterRecord(-1, r, new Vec3(), true);
         }

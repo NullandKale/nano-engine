@@ -15,7 +15,7 @@ namespace NullEngine.Views
 {
     public class MainWindow : Window
     {
-        public double scale = -3;
+        public double scale;
 
         public bool isMouseActive = false;
         public int skipNextMouseEvent = 0;
@@ -41,6 +41,15 @@ namespace NullEngine.Views
 
         public MainWindow()
         {
+            if (Environment.OSVersion.Platform == PlatformID.Unix)
+            {
+                scale = -4;
+            }
+            else
+            {
+                scale = -1;
+            }
+
             InitializeComponent();
             InitRenderer();
         }

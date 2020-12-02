@@ -64,12 +64,13 @@ namespace NullEngine.Rendering
             renderDataManager.addSphereForID(new Sphere(new Vec3(-10, 10, -5), 0.5f, mat7));
             renderDataManager.addSphereForID(new Sphere(new Vec3(10, 10, -5), 0.5f, mat8));
             renderDataManager.addSphereForID(new Sphere(new Vec3(-1, -100000, 0), 100000f, mat4));
-            renderDataManager.addSphereForID(new Sphere(new Vec3(4, 2, 0), 2f, mat5));
-            renderDataManager.addSphereForID(new Sphere(new Vec3(-4, 2, 0), 2f, mat6));
+            renderDataManager.addSphereForID(new Sphere(new Vec3(7, 5, 0), 5f, mat6));
+            renderDataManager.addSphereForID(new Sphere(new Vec3(-7, 5, 0), 5f, mat6));
+            renderDataManager.addSphereForID(new Sphere(new Vec3(0, 5, -7), 5f, mat5));
 
             Random rng = new Random();
 
-            for(int i = 0; i < 100; i++)
+            for(int i = 0; i < 50; i++)
             {
                 int mat = mat0;
 
@@ -83,7 +84,7 @@ namespace NullEngine.Rendering
                 }
 
                 float size = (float)(rng.NextDouble() * 2);
-                renderDataManager.addSphereForID(new Sphere(new Vec3(rng.Next(-50, 50), size, rng.Next(5, 50)), size, mat));
+                renderDataManager.addSphereForID(new Sphere(new Vec3(rng.Next(-25, 25), size, rng.Next(5, 25)), size, mat));
             }
 
             frameTimer = new FrameTimer();
