@@ -147,7 +147,9 @@ namespace NullEngine.Views
                     Console.WriteLine("change : " + xChange + " " + yChange);
                     Console.WriteLine("mouse : " + center);
 
-                    if ((center.X < 0 || center.X >= ClientSize.Width) || (center.Y < 0 || center.Y >= ClientSize.Height))
+                    double deadzone = 0.8;
+
+                    if ((center.X < ClientSize.Width * (1.0 - deadzone) || center.X >= ClientSize.Width * deadzone) || (center.Y < ClientSize.Height * (1.0 - deadzone) || center.Y >= ClientSize.Height * deadzone))
                     {
                         int xToSet = (int)(Position.X + (ClientSize.Width / 2.0));
                         int yToSet = (int)(Position.Y + (ClientSize.Height / 2.0));
