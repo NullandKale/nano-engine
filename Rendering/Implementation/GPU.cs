@@ -95,7 +95,7 @@ namespace NullEngine.Rendering.Implementation
             ColorRay(outputLength, camera, frameData.deviceFrameData, renderDataManager.getDeviceRenderData());
             NormalizeLighting(outputLength, frameData.lightBuffer);
             CombineLightingAndColor(outputLength, frameData.deviceFrameData, camera.mode);
-            TAA(outputLength, frameData.deviceFrameData, 0.65f, tick, ticksSinceCameraMovement);
+            TAA(outputLength, frameData.deviceFrameData, 0.85f, tick, ticksSinceCameraMovement);
             DrawToBitmap(outputLength, camera, frameData.TAABuffer, output.frameBuffer.frame, isLinux);
             
             tick++;
@@ -212,7 +212,7 @@ namespace NullEngine.Rendering.Implementation
                         {
                             lightDir = Vec3.unitVector(lightDir);
                             lighting += material.color * XMath.Max(0.0f, Vec3.dot(lightDir, rec.normal));
-                            lighting *= XMath.Pow(XMath.Max(0.0f, Vec3.dot(-Vec3.reflect(rec.normal, -lightDir), frameData.rayBuffer[pixel].b)), material.reflectivity) * material.color;
+                            //lighting += XMath.Pow(XMath.Max(0.0f, Vec3.dot(-Vec3.reflect(rec.normal, -lightDir), frameData.rayBuffer[pixel].b)), material.reflectivity) * material.color;
                         }
                     }
                 }
@@ -324,7 +324,11 @@ namespace NullEngine.Rendering.Implementation
                 }
                 else
                 {
-                    if(ticksSinceCameraMovement != 0)
+                    if(ticksSinceCameraMovement == 0)
+                    {
+                        exponent = 1;
+                    }
+                    else if(ticksSinceCameraMovement > 0)
                     {
                         exponent = exponent / ticksSinceCameraMovement;
                     }

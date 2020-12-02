@@ -6,6 +6,7 @@ using Avalonia.Platform;
 using Avalonia.Threading;
 using NullEngine.Rendering;
 using NullEngine.Rendering.DataStructures;
+using NullEngine.Utils;
 using System;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
@@ -137,6 +138,8 @@ namespace NullEngine.Views
                     Vec3 strafe = new Vec3(-yChange, -xChange, 0) * 0.008f;
                     renderer.CameraUpdate(new Vec3(), strafe);
                 }
+
+                MouseUtils.SetCursorPos((int)(ClientSize.Width / 2.0) + Position.X, (int)(ClientSize.Height / 2.0) + Position.Y);
 
                 lastMouseX = x;
                 lastMouseY = y;

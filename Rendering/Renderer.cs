@@ -47,22 +47,22 @@ namespace NullEngine.Rendering
             gpu = new GPU(forceCPU, isLinux);
             renderDataManager = new RenderDataManager(gpu);
 
-            int mat0 = renderDataManager.addMaterialForID(MaterialData.makeDiffuse(new Vec3(1.0, 0, 0)));
-            int mat1 = renderDataManager.addMaterialForID(MaterialData.makeDiffuse(new Vec3(0, 1.0, 0)));
-            int mat2 = renderDataManager.addMaterialForID(MaterialData.makeDiffuse(new Vec3(0, 0, 1.0)));
-            int mat3 = renderDataManager.addMaterialForID(MaterialData.makeLight(new Vec3(1, 1, 1)));
-            int mat4 = renderDataManager.addMaterialForID(MaterialData.makeDiffuse(new Vec3(1, 1, 1)));
-            int mat5 = renderDataManager.addMaterialForID(MaterialData.makeMirror(new Vec3(1, 1, 1)));
-            int mat6 = renderDataManager.addMaterialForID(MaterialData.makeMirror(new Vec3(1, 1, 1)));
-            int mat7 = renderDataManager.addMaterialForID(MaterialData.makeLight(new Vec3(1, 0, 0)));
-            int mat8 = renderDataManager.addMaterialForID(MaterialData.makeLight(new Vec3(0, 0, 1)));
+            int mat0 = renderDataManager.addMaterialForID(MaterialData.makeDiffuse(new Vec3(0.9999, 0, 0)));
+            int mat1 = renderDataManager.addMaterialForID(MaterialData.makeDiffuse(new Vec3(0, 0.9999, 0)));
+            int mat2 = renderDataManager.addMaterialForID(MaterialData.makeDiffuse(new Vec3(0, 0, 0.9999)));
+            int mat3 = renderDataManager.addMaterialForID(MaterialData.makeLight(new Vec3(0.9999, 0.9999, 0.9999)));
+            int mat4 = renderDataManager.addMaterialForID(MaterialData.makeDiffuse(new Vec3(0.9999, 0.9999, 0.9999)));
+            int mat5 = renderDataManager.addMaterialForID(MaterialData.makeMirror(new Vec3(0.9999, 0.9999, 0.9999), 0.2f));
+            int mat6 = renderDataManager.addMaterialForID(MaterialData.makeMirror(new Vec3(0.9999, 0.9999, 0.9999)));
+            int mat7 = renderDataManager.addMaterialForID(MaterialData.makeLight(new Vec3(0.9999, 0.1, 0.1)));
+            int mat8 = renderDataManager.addMaterialForID(MaterialData.makeLight(new Vec3(0.1, 0.1, 0.9999)));
 
             renderDataManager.addSphereForID(new Sphere(new Vec3(0, 1, 0), 0.5f, mat0));
             renderDataManager.addSphereForID(new Sphere(new Vec3(1, 1, 0), 0.5f, mat1));
             renderDataManager.addSphereForID(new Sphere(new Vec3(-1, 1, 0), 0.5f, mat2));
-            renderDataManager.addSphereForID(new Sphere(new Vec3(0, 10, 0), 0.5f, mat3));
-            //renderDataManager.addSphereForID(new Sphere(new Vec3(-10, 10, -5), 0.5f, mat7));
-            //renderDataManager.addSphereForID(new Sphere(new Vec3(10, 10, 5), 0.5f, mat8));
+            renderDataManager.addSphereForID(new Sphere(new Vec3(0, 10, -5), 0.5f, mat3));
+            renderDataManager.addSphereForID(new Sphere(new Vec3(-10, 10, -5), 0.5f, mat7));
+            renderDataManager.addSphereForID(new Sphere(new Vec3(10, 10, -5), 0.5f, mat8));
             renderDataManager.addSphereForID(new Sphere(new Vec3(-1, -1000, 0), 1000f, mat4));
             renderDataManager.addSphereForID(new Sphere(new Vec3(4, 2, 0), 2f, mat5));
             renderDataManager.addSphereForID(new Sphere(new Vec3(-4, 2, 0), 2f, mat6));
