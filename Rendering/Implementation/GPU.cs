@@ -164,7 +164,7 @@ namespace NullEngine.Rendering.Implementation
 
             for (int i = 0; i < camera.maxBounces; i++)
             {
-                HitRecord rec = GetWorldHit(working, renderData, minT);
+                HitRecord rec = GetWorldHit(renderData, working, renderData, minT);
 
                 if (rec.materialID == -1)
                 {
@@ -203,7 +203,7 @@ namespace NullEngine.Rendering.Implementation
                 {
                     Sphere s = renderData.spheres[renderData.lightSphereIDs[j]];
                     Vec3 lightDir = s.center - rec.p;
-                    HitRecord shadowRec = GetWorldHit(new Ray(rec.p, lightDir), renderData, minT);
+                    HitRecord shadowRec = GetWorldHit(renderData, new Ray(rec.p, lightDir), renderData, minT);
 
                     if (shadowRec.materialID != -1 && (shadowRec.p - rec.p).length() > lightDir.length() - (s.radius * 1.1f)) // the second part of this IF could probably be much more efficent
                     {
@@ -389,9 +389,9 @@ namespace NullEngine.Rendering.Implementation
             return new Vec3(r * XMath.Cos(a), r * XMath.Sin(a), z);
         }
 
-        private static HitRecord GetWorldHit(Ray r, dRenderData world, float minT)
+        private static HitRecord GetWorldHit(dRenderData renderData, Ray r, dRenderData world, float minT)
         {
-            HitRecord rec = GetSphereHit(r, world.spheres, minT);
+            HitRecord rec = GetSphereHit(renderData, r, world.spheres, minT);
             //HitRecord vRec = world.VoxelChunk.hit(r, minT, rec.t);
             //HitRecord triRec = GetMeshHit(r, world, vRec.t);
 
@@ -410,7 +410,7 @@ namespace NullEngine.Rendering.Implementation
         }
 
 
-        private static HitRecord GetSphereHit(Ray r, ArrayView<Sphere> spheres, float minT)
+        private static HitRecord GetSphereHit(dRenderData renderData, Ray r, ArrayView<Sphere> spheres, float minT)
         {
             float closestT = 10000;
             int sphereIndex = -1;
@@ -611,7 +611,7 @@ namespace NullEngine.Rendering.Implementation
             else if (material.type == 3) //Lights
             {
                 refracted = rec.p + rec.normal;
-                return new ScatterRecord(rec.materialID, new Ray(rec.p, refracted - rec.p), material.color, false);
+                //return new ScatterRecord(rec.materialID, new Ray(rec.p, refracted - rec.p), material.color, false);
             }
 
             return new ScatterRecord(-1, r, new Vec3(), true);

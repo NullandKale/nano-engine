@@ -63,9 +63,28 @@ namespace NullEngine.Rendering
             renderDataManager.addSphereForID(new Sphere(new Vec3(0, 10, -5), 0.5f, mat3));
             renderDataManager.addSphereForID(new Sphere(new Vec3(-10, 10, -5), 0.5f, mat7));
             renderDataManager.addSphereForID(new Sphere(new Vec3(10, 10, -5), 0.5f, mat8));
-            renderDataManager.addSphereForID(new Sphere(new Vec3(-1, -1000, 0), 1000f, mat4));
+            renderDataManager.addSphereForID(new Sphere(new Vec3(-1, -100000, 0), 100000f, mat4));
             renderDataManager.addSphereForID(new Sphere(new Vec3(4, 2, 0), 2f, mat5));
             renderDataManager.addSphereForID(new Sphere(new Vec3(-4, 2, 0), 2f, mat6));
+
+            Random rng = new Random();
+
+            for(int i = 0; i < 100; i++)
+            {
+                int mat = mat0;
+
+                if(rng.NextDouble() < 0.95)
+                {
+                    mat = renderDataManager.addMaterialForID(MaterialData.makeDiffuse(new Vec3(rng.NextDouble() > 0.5 ? 0.1 : 0.9, rng.NextDouble() > 0.5 ? 0.1 : 0.9, rng.NextDouble() > 0.5 ? 0.1 : 0.9)));
+                }
+                else
+                {
+                    mat = renderDataManager.addMaterialForID(MaterialData.makeLight(new Vec3(rng.NextDouble() > 0.5 ? 0.1 : 0.9, rng.NextDouble() > 0.5 ? 0.1 : 0.9, rng.NextDouble() > 0.5 ? 0.1 : 0.9)));
+                }
+
+                float size = (float)(rng.NextDouble() * 2);
+                renderDataManager.addSphereForID(new Sphere(new Vec3(rng.Next(-50, 50), size, rng.Next(5, 50)), size, mat));
+            }
 
             frameTimer = new FrameTimer();
 
@@ -89,7 +108,7 @@ namespace NullEngine.Rendering
             this.width = width;
             this.height = height;
             
-            camera = new Camera(new Vec3(0, 1, -5), new Vec3(0, 1, -4), Vec3.unitVector(new Vec3(0, 1, 0)), width, height, 5, 40f);
+            camera = new Camera(new Vec3(-0.25, 1, 7.5), new Vec3(-0.25, 1.12, 6.5), Vec3.unitVector(new Vec3(0, 1, 0)), width, height, 5, 40f);
             lastCameraMovementTick = gpu.tick;
         }
 

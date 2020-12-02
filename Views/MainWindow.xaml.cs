@@ -15,7 +15,7 @@ namespace NullEngine.Views
 {
     public class MainWindow : Window
     {
-        public double scale = -2;
+        public double scale = -3;
 
         public bool isMouseActive = false;
         public int skipNextMouseEvent = 0;
@@ -124,6 +124,7 @@ namespace NullEngine.Views
 
         private void MainWindow_PointerMoved(object sender, Avalonia.Input.PointerEventArgs e)
         {
+            //HOLY SHIT THIS IS A HACK ON A HACK ON A HACK
             if(isMouseActive)
             {
                 Point p = e.GetPosition(this);
@@ -229,7 +230,7 @@ namespace NullEngine.Views
                 //HACK must manually call invalidate on the Image control that displays the writeable bitmap
                 Frame.InvalidateVisual();
 
-                Info.Text =   (int)renderer.frameTimer.lastFrameUpdateRate + " FPS " + (int)frameRate + " MS";
+                Info.Text = (int)renderer.frameTimer.lastFrameUpdateRate + " FPS " + (int)frameRate + " MS\n" + renderer.camera.origin + "\n" + renderer.camera.lookAt;
             }
             else
             {
