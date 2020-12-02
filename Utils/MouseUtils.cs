@@ -17,7 +17,7 @@ namespace NullEngine.Utils
             }
             else
             {
-                ("xdotool mousemove" + x + " " + y).Bash();
+                ("xdotool mousemove " + x + " " + y).Bash();
             }
         }
 
