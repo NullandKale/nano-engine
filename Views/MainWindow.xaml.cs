@@ -47,7 +47,7 @@ namespace NullEngine.Views
             }
             else
             {
-                scale = -1;
+                scale = -2;
             }
 
             InitializeComponent();

@@ -37,6 +37,7 @@ namespace NullEngine.Rendering
         private RenderDataManager renderDataManager;
         private FrameData frameData;
 
+        private int tick = 0;
         private int lastCameraMovementTick = 0;
 
         public Renderer(MainWindow window, string sceneFileName, int targetFramerate, bool forceCPU, bool isLinux)
@@ -50,8 +51,8 @@ namespace NullEngine.Rendering
             int mat0 = renderDataManager.addMaterialForID(MaterialData.makeDiffuse(new Vec3(0.9999, 0, 0)));
             int mat1 = renderDataManager.addMaterialForID(MaterialData.makeDiffuse(new Vec3(0, 0.9999, 0)));
             int mat2 = renderDataManager.addMaterialForID(MaterialData.makeDiffuse(new Vec3(0, 0, 0.9999)));
-            int mat3 = renderDataManager.addMaterialForID(MaterialData.makeLight(new Vec3(0.5, 0.5, 0.5)));
-            int mat4 = renderDataManager.addMaterialForID(MaterialData.makeDiffuse(new Vec3(0.9999, 0.9999, 0.9999)));
+            int mat3 = renderDataManager.addMaterialForID(MaterialData.makeLight(new Vec3(1, 1, 1)));
+            int mat4 = renderDataManager.addMaterialForID(MaterialData.makeDiffuse(new Vec3(1, 1, 1)));
             int mat5 = renderDataManager.addMaterialForID(MaterialData.makeMirror(new Vec3(0.9999, 0.9999, 0.9999), 0.2f));
             int mat6 = renderDataManager.addMaterialForID(MaterialData.makeMirror(new Vec3(0.9999, 0.9999, 0.9999)));
             int mat7 = renderDataManager.addMaterialForID(MaterialData.makeLight(new Vec3(0.9999, 0.1, 0.1)));
@@ -60,13 +61,13 @@ namespace NullEngine.Rendering
             renderDataManager.addSphereForID(new Sphere(new Vec3(0, 1, 0), 0.5f, mat0));
             renderDataManager.addSphereForID(new Sphere(new Vec3(1, 1, 0), 0.5f, mat1));
             renderDataManager.addSphereForID(new Sphere(new Vec3(-1, 1, 0), 0.5f, mat2));
-            renderDataManager.addSphereForID(new Sphere(new Vec3(0, 100, 0), 0.5f, mat3));
-            //renderDataManager.addSphereForID(new Sphere(new Vec3(-10, 10, 0), 0.5f, mat7));
-            //renderDataManager.addSphereForID(new Sphere(new Vec3(10, 10, 0), 0.5f, mat8));
+            renderDataManager.addSphereForID(new Sphere(new Vec3(0, 25, 0), 1f, mat3));
+            //renderDataManager.addSphereForID(new Sphere(new Vec3(-25, 25, 0), 1f, mat7));
+            //renderDataManager.addSphereForID(new Sphere(new Vec3(25, 25, 0), 1f, mat8));
             renderDataManager.addSphereForID(new Sphere(new Vec3(-1, -100000, 0), 100000f, mat4));
-            renderDataManager.addSphereForID(new Sphere(new Vec3(7, 5, 0), 5f, mat6));
-            renderDataManager.addSphereForID(new Sphere(new Vec3(-7, 5, 0), 5f, mat6));
-            renderDataManager.addSphereForID(new Sphere(new Vec3(0, 5, -7), 5f, mat5));
+            //renderDataManager.addSphereForID(new Sphere(new Vec3(7, 5, 0), 5f, mat6));
+            //renderDataManager.addSphereForID(new Sphere(new Vec3(-7, 5, 0), 5f, mat6));
+            //renderDataManager.addSphereForID(new Sphere(new Vec3(0, 5, -7), 5f, mat5));
 
             Random rng = new Random();
 
@@ -74,7 +75,7 @@ namespace NullEngine.Rendering
             {
                 int mat = mat0;
 
-                if(rng.NextDouble() < 0.95)
+                if(rng.NextDouble() < 0.90)
                 {
                     mat = renderDataManager.addMaterialForID(MaterialData.makeDiffuse(new Vec3(rng.NextDouble() > 0.5 ? 0.1 : 0.9, rng.NextDouble() > 0.5 ? 0.1 : 0.9, rng.NextDouble() > 0.5 ? 0.1 : 0.9)));
                 }
@@ -86,6 +87,7 @@ namespace NullEngine.Rendering
                 float size = (float)(rng.NextDouble() * 2);
                 renderDataManager.addSphereForID(new Sphere(new Vec3(rng.Next(-25, 25), size, rng.Next(5, 25)), size, mat));
             }
+            camera = new Camera(new Vec3(-0.25, 1, 7.5), new Vec3(-0.25, 1.12, 6.5), Vec3.unitVector(new Vec3(0, 1, 0)), 300, 300, 5, 3, 3, 40f);
 
             frameTimer = new FrameTimer();
 
@@ -108,21 +110,21 @@ namespace NullEngine.Rendering
         {
             this.width = width;
             this.height = height;
-            
-            camera = new Camera(new Vec3(-0.25, 1, 7.5), new Vec3(-0.25, 1.12, 6.5), Vec3.unitVector(new Vec3(0, 1, 0)), width, height, 5, 40f);
-            lastCameraMovementTick = gpu.tick;
+
+            camera = new Camera(camera, width, height);            
+            lastCameraMovementTick = tick;
         }
 
         public void CameraModeUpdate(int mode)
         {
             camera.mode = mode;
-            lastCameraMovementTick = gpu.tick;
+            lastCameraMovementTick = tick;
         }
 
         public void CameraUpdate(Vec3 movement, Vec3 turn)
         {
             camera = new Camera(camera, movement, turn);
-            lastCameraMovementTick = gpu.tick;
+            lastCameraMovementTick = tick;
         }
 
         //eveything below this happens in the render thread
@@ -180,8 +182,9 @@ namespace NullEngine.Rendering
         {
             if (deviceFrameBuffer != null && !deviceFrameBuffer.isDisposed)
             {
-                gpu.Render(deviceFrameBuffer, camera, renderDataManager, frameData, gpu.tick - lastCameraMovementTick);
+                gpu.Render(deviceFrameBuffer, camera, renderDataManager, frameData, tick, tick - lastCameraMovementTick);
                 deviceFrameBuffer.memoryBuffer.CopyTo(frameBuffer, 0, 0, frameBuffer.Length);
+                tick++;
             }
         }
 

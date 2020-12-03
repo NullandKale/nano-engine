@@ -14,7 +14,9 @@ namespace NullEngine.Rendering.DataStructures
     {
         public SpecializedValue<int> height;
         public SpecializedValue<int> width;
-        public SpecializedValue<int> maxBounces;
+        public SpecializedValue<int> maxColorBounces;
+        public SpecializedValue<int> lightsPerSample;
+        public SpecializedValue<int> lightBounces;
 
         public float verticalFov;
 
@@ -35,7 +37,9 @@ namespace NullEngine.Rendering.DataStructures
             mode = camera.mode;
             this.width = camera.width;
             this.height = camera.height;
-            this.maxBounces = camera.maxBounces;
+            this.maxColorBounces = camera.maxColorBounces;
+            this.lightsPerSample = camera.lightsPerSample;
+            this.lightBounces = camera.lightBounces;
 
             Vector4 temp = camera.lookAt - camera.origin;
 
@@ -63,14 +67,16 @@ namespace NullEngine.Rendering.DataStructures
             reciprocalWidth = 1.0f / width;
         }
 
-        public Camera(Camera camera, int width, int height, float verticalFov)
+        public Camera(Camera camera, int width, int height)
         {
             mode = camera.mode;
             this.width = new SpecializedValue<int>(width);
             this.height = new SpecializedValue<int>(height);
-            this.maxBounces = camera.maxBounces;
+            this.maxColorBounces = camera.maxColorBounces;
+            this.lightsPerSample = camera.lightsPerSample;
+            this.lightBounces = camera.lightBounces;
 
-            this.verticalFov = verticalFov;
+            this.verticalFov = camera.verticalFov;
 
             this.origin = camera.origin;
             this.lookAt = camera.lookAt;
@@ -84,12 +90,15 @@ namespace NullEngine.Rendering.DataStructures
             reciprocalWidth = 1.0f / width;
         }
 
-        public Camera(Vec3 origin, Vec3 lookAt, Vec3 up, int width, int height, int maxBounces, float verticalFov)
+        public Camera(Vec3 origin, Vec3 lookAt, Vec3 up, int width, int height, int maxColorBounces, int lightsPerSample, int lightBounces, float verticalFov)
         {
             mode = 0;
             this.width = new SpecializedValue<int>(width);
             this.height = new SpecializedValue<int>(height);
-            this.maxBounces = new SpecializedValue<int>(maxBounces);
+            this.maxColorBounces = new SpecializedValue<int>(maxColorBounces);
+            this.lightsPerSample = new SpecializedValue<int>(lightsPerSample);
+            this.lightBounces = new SpecializedValue<int>(lightBounces);
+
             this.verticalFov = verticalFov;
             this.origin = origin;
             this.lookAt = lookAt;
@@ -117,7 +126,6 @@ namespace NullEngine.Rendering.DataStructures
 
         public Ray GetRay(float x, float y)
         {
-            //return new Ray(origin, origin - lookAt);
             return rayFromUnit(2f * (x * reciprocalWidth) - 1f, 2f * (y * reciprocalHeight) - 1f);
         }
     }
