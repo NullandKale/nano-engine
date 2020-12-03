@@ -102,34 +102,6 @@ namespace NullEngine.Rendering.Implementation
 
             device.Synchronize();
         }
-
-        private (float min, float max) ReduceMax(ArrayView<float> map)
-        {
-            using (var target = device.Allocate<float>(1))
-            {
-                // This overload requires an explicit output buffer but
-                // uses an implicit temporary cache from the associated accelerator.
-                // Call a different overload to use a user-defined memory cache.
-                device.Reduce<float, MinFloat>(
-                    device.DefaultStream,
-                    map,
-                    target.View);
-
-                device.Synchronize();
-
-                var min = target.GetAsArray();
-
-                device.Reduce<float, MaxFloat>(
-                device.DefaultStream,
-                map,
-                target.View);
-
-                device.Synchronize();
-
-                var max = target.GetAsArray();
-                return (min[0], max[0]);
-            }
-        }
     }
 
     public static class GPUKernels
@@ -205,14 +177,14 @@ namespace NullEngine.Rendering.Implementation
                     Vec3 lightDir = s.center - rec.p;
                     HitRecord shadowRec = GetWorldHit(renderData, new Ray(rec.p, lightDir), renderData, minT);
 
-                    if (shadowRec.materialID != -1 && (shadowRec.p - rec.p).length() > lightDir.length() - (s.radius * 2f)) // the second part of this IF could probably be much more efficent
+                    if (shadowRec.materialID != -1  &&(shadowRec.p - rec.p).length() > (lightDir.length() - (s.radius * 1.1f))) // the second part of this IF could probably be much more efficent
                     {
                         MaterialData material = renderData.mats[shadowRec.materialID];
                         if (material.type != 1)
                         {
                             lightDir = Vec3.unitVector(lightDir);
-                            lighting += material.color * XMath.Max(0.0f, Vec3.dot(lightDir, rec.normal));
-                            //lighting += XMath.Pow(XMath.Max(0.0f, Vec3.dot(-Vec3.reflect(rec.normal, -lightDir), frameData.rayBuffer[pixel].b)), material.reflectivity) * material.color;
+                            lighting += material.color * XMath.Max(0.1f, Vec3.dot(lightDir, rec.normal));
+                            lighting *= XMath.Pow(XMath.Max(0.1f, Vec3.dot(-Vec3.reflect(rec.normal, -lightDir), frameData.rayBuffer[pixel].b)), material.reflectivity) * material.color;
                         }
                     }
                 }
@@ -379,6 +351,34 @@ namespace NullEngine.Rendering.Implementation
             bitmapData[(newIndex * 3)] = (byte)(255.99f * data[(index)]);
             bitmapData[(newIndex * 3) + 1] = (byte)(255.99f * data[(index)]);
             bitmapData[(newIndex * 3) + 2] = (byte)(255.99f * data[(index)]);
+        }
+
+        public static (float min, float max) ReduceMax(Accelerator device, ArrayView<float> map)
+        {
+            using (var target = device.Allocate<float>(1))
+            {
+                // This overload requires an explicit output buffer but
+                // uses an implicit temporary cache from the associated accelerator.
+                // Call a different overload to use a user-defined memory cache.
+                device.Reduce<float, MinFloat>(
+                    device.DefaultStream,
+                    map,
+                    target.View);
+
+                device.Synchronize();
+
+                var min = target.GetAsArray();
+
+                device.Reduce<float, MaxFloat>(
+                device.DefaultStream,
+                map,
+                target.View);
+
+                device.Synchronize();
+
+                var max = target.GetAsArray();
+                return (min[0], max[0]);
+            }
         }
 
         private static Vec3 RandomUnitVector(ref XorShift128Plus rng)

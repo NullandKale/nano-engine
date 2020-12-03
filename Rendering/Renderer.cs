@@ -50,7 +50,7 @@ namespace NullEngine.Rendering
             int mat0 = renderDataManager.addMaterialForID(MaterialData.makeDiffuse(new Vec3(0.9999, 0, 0)));
             int mat1 = renderDataManager.addMaterialForID(MaterialData.makeDiffuse(new Vec3(0, 0.9999, 0)));
             int mat2 = renderDataManager.addMaterialForID(MaterialData.makeDiffuse(new Vec3(0, 0, 0.9999)));
-            int mat3 = renderDataManager.addMaterialForID(MaterialData.makeLight(new Vec3(0.9999, 0.9999, 0.9999)));
+            int mat3 = renderDataManager.addMaterialForID(MaterialData.makeLight(new Vec3(0.5, 0.5, 0.5)));
             int mat4 = renderDataManager.addMaterialForID(MaterialData.makeDiffuse(new Vec3(0.9999, 0.9999, 0.9999)));
             int mat5 = renderDataManager.addMaterialForID(MaterialData.makeMirror(new Vec3(0.9999, 0.9999, 0.9999), 0.2f));
             int mat6 = renderDataManager.addMaterialForID(MaterialData.makeMirror(new Vec3(0.9999, 0.9999, 0.9999)));
@@ -60,9 +60,9 @@ namespace NullEngine.Rendering
             renderDataManager.addSphereForID(new Sphere(new Vec3(0, 1, 0), 0.5f, mat0));
             renderDataManager.addSphereForID(new Sphere(new Vec3(1, 1, 0), 0.5f, mat1));
             renderDataManager.addSphereForID(new Sphere(new Vec3(-1, 1, 0), 0.5f, mat2));
-            renderDataManager.addSphereForID(new Sphere(new Vec3(0, 10, -5), 0.5f, mat3));
-            renderDataManager.addSphereForID(new Sphere(new Vec3(-10, 10, -5), 0.5f, mat7));
-            renderDataManager.addSphereForID(new Sphere(new Vec3(10, 10, -5), 0.5f, mat8));
+            renderDataManager.addSphereForID(new Sphere(new Vec3(0, 100, 0), 0.5f, mat3));
+            //renderDataManager.addSphereForID(new Sphere(new Vec3(-10, 10, 0), 0.5f, mat7));
+            //renderDataManager.addSphereForID(new Sphere(new Vec3(10, 10, 0), 0.5f, mat8));
             renderDataManager.addSphereForID(new Sphere(new Vec3(-1, -100000, 0), 100000f, mat4));
             renderDataManager.addSphereForID(new Sphere(new Vec3(7, 5, 0), 5f, mat6));
             renderDataManager.addSphereForID(new Sphere(new Vec3(-7, 5, 0), 5f, mat6));
@@ -80,7 +80,7 @@ namespace NullEngine.Rendering
                 }
                 else
                 {
-                    mat = renderDataManager.addMaterialForID(MaterialData.makeLight(new Vec3(rng.NextDouble() > 0.5 ? 0.1 : 0.9, rng.NextDouble() > 0.5 ? 0.1 : 0.9, rng.NextDouble() > 0.5 ? 0.1 : 0.9)));
+                    mat = renderDataManager.addMaterialForID(MaterialData.makeMirror(new Vec3(rng.NextDouble() > 0.5 ? 0.1 : 0.9, rng.NextDouble() > 0.5 ? 0.1 : 0.9, rng.NextDouble() > 0.5 ? 0.1 : 0.9)));
                 }
 
                 float size = (float)(rng.NextDouble() * 2);
