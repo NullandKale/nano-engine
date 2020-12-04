@@ -8,6 +8,11 @@ namespace NullEngine.Rendering.DataStructures
 {
     public struct MaterialData
     {
+        public const int DIFFUSE = 0;
+        public const int GLASS = 1;
+        public const int METAL = 2;
+        public const int LIGHT = 3;
+
         public int type;
         public Vec3 color;
         public float ref_idx;
@@ -25,27 +30,27 @@ namespace NullEngine.Rendering.DataStructures
 
         public static MaterialData makeDiffuse(Vec3 diffuseColor)
         {
-            return new MaterialData(diffuseColor, 0, 0, 0, 0);
+            return new MaterialData(diffuseColor, 0, 0, 0, DIFFUSE);
         }
 
         public static MaterialData makeGlass(Vec3 diffuseColor, float ref_idx)
         {
-            return new MaterialData(diffuseColor, ref_idx, 0, 0, 1);
+            return new MaterialData(diffuseColor, ref_idx, 0, 0, GLASS);
         }
 
         public static MaterialData makeMirror(Vec3 diffuseColor, float fuzz)
         {
-            return new MaterialData(diffuseColor, 0, 0, (fuzz < 1 ? fuzz : 1), 2);
+            return new MaterialData(diffuseColor, 0, 0, (fuzz < 1 ? fuzz : 1), METAL);
         }
 
         public static MaterialData makeMirror(Vec3 diffuseColor)
         {
-            return new MaterialData(diffuseColor, 0, 0, 0, 2);
+            return new MaterialData(diffuseColor, 0, 0, 0, METAL);
         }
 
         public static MaterialData makeLight(Vec3 emmissiveColor)
         {
-            return new MaterialData(emmissiveColor, 0, 0, 0, 3);
+            return new MaterialData(emmissiveColor, 0, 0, 0, LIGHT);
         }
     }
 }

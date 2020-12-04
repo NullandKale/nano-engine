@@ -4,6 +4,8 @@ using Avalonia.Markup.Xaml;
 using Avalonia.Media.Imaging;
 using Avalonia.Platform;
 using Avalonia.Threading;
+using ILGPU.Algorithms;
+using ILGPU.Algorithms.Random;
 using NullEngine.Rendering;
 using NullEngine.Rendering.DataStructures;
 using NullEngine.Utils;
@@ -53,7 +55,6 @@ namespace NullEngine.Views
             InitializeComponent();
             InitRenderer();
         }
-
         private void InitializeComponent()
         {
             AvaloniaXamlLoader.Load(this);
@@ -239,7 +240,7 @@ namespace NullEngine.Views
                 //HACK must manually call invalidate on the Image control that displays the writeable bitmap
                 Frame.InvalidateVisual();
 
-                Info.Text = (int)renderer.frameTimer.lastFrameUpdateRate + " FPS " + (int)frameRate + " MS\n" + renderer.camera.origin + "\n" + renderer.camera.lookAt;
+                Info.Text = (int)renderer.frameTimer.averageUpdateRate + " FPS " + (int)frameRate + " MS\n" + renderer.camera.origin + "\n" + renderer.camera.lookAt;
             }
             else
             {

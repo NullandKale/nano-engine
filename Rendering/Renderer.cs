@@ -65,11 +65,11 @@ namespace NullEngine.Rendering
             //renderDataManager.addSphereForID(new Sphere(new Vec3(-25, 25, 0), 1f, mat7));
             //renderDataManager.addSphereForID(new Sphere(new Vec3(25, 25, 0), 1f, mat8));
             renderDataManager.addSphereForID(new Sphere(new Vec3(-1, -100000, 0), 100000f, mat4));
-            //renderDataManager.addSphereForID(new Sphere(new Vec3(7, 5, 0), 5f, mat6));
-            //renderDataManager.addSphereForID(new Sphere(new Vec3(-7, 5, 0), 5f, mat6));
-            //renderDataManager.addSphereForID(new Sphere(new Vec3(0, 5, -7), 5f, mat5));
+            renderDataManager.addSphereForID(new Sphere(new Vec3(7, 5, 0), 5f, mat6));
+            renderDataManager.addSphereForID(new Sphere(new Vec3(-7, 5, 0), 5f, mat6));
+            renderDataManager.addSphereForID(new Sphere(new Vec3(0, 5, -7), 5f, mat5));
 
-            Random rng = new Random();
+            Random rng = new Random(0);
 
             for(int i = 0; i < 50; i++)
             {

@@ -121,91 +121,97 @@ namespace NullEngine.Rendering.Implementation
 
         public static void ColorRay(Index1 pixel, Camera camera, dFrameData frameData, dRenderData renderData)
         {
-            Vec3 attenuation = new Vec3(1f, 1f, 1f);
-            Vec3 lighting = new Vec3();
+            Vec3 attenuation = new Vec3(1, 1, 1);
+            Vec3 lighting = new Vec3(1, 1, 1);
+
             int lightsToSample = XMath.Min((int)renderData.lightSphereIDs.Length, camera.lightsPerSample);
-
-            Ray working = frameData.rayBuffer[pixel];
-            bool attenuationHasValue = false;
-
+            Ray currentRay = frameData.rayBuffer[pixel];
             XorShift128Plus rng = frameData.rngBuffer[pixel];
 
             float minT = 0.001f;
 
             for (int i = 0; i < camera.maxColorBounces; i++)
             {
-                HitRecord hitRecord = GetWorldHit(renderData, working, renderData, minT);
+                float bouncePower = (1f / (i + 1f));
+                HitRecord hitRecord = GetWorldHit(renderData, currentRay, renderData, minT);
 
-                if (hitRecord.materialID == -1)
-                {
-                    if (i == 0 || attenuationHasValue)
-                    {
-                        frameData.metaBuffer[pixel] = -2;
-                        attenuation = new Vec3();
-                    }
-                    break;
-                }
-                else
+                if (hitRecord.materialID != -1)
                 {
                     if (i == 0)
                     {
-                        frameData.depthBuffer[pixel] = hitRecord.t;
-                        frameData.metaBuffer[pixel] = hitRecord.drawableID;
+                        WriteFirstHitData(pixel, frameData, hitRecord);
                     }
 
-                    ScatterRecord sRec = Scatter(working, hitRecord, ref rng, renderData.mats, minT);
-                    if (sRec.materialID != -1)
+                    attenuation *= (ColorHit(pixel, i, renderData, frameData, hitRecord, ref currentRay, ref rng, minT) * bouncePower);
+                    if (i < camera.lightBounces)
                     {
-                        attenuationHasValue = sRec.mirrorSkyLightingFix;
-                        attenuation *= sRec.attenuation;
-                        working = sRec.scatterRay;
-                    }
-                    else
-                    {
-                        frameData.metaBuffer[pixel] = -1;
-                        break;
-                    }
-
-                    if(i < 3)
-                    {
-                        Vec3 luminance = new Vec3();
-
-                        for (int j = 0; j < lightsToSample; j++)
-                        {
-                            Sphere light = renderData.spheres[renderData.lightSphereIDs[rng.Next(0, renderData.lightSphereIDs.Length)]];
-                            MaterialData lightMap = renderData.mats[light.materialIndex];
-                            Vec3 lightDir = Vec3.unitVector(light.center - hitRecord.p);
-                            HitRecord shadowRec = GetWorldHit(renderData, new Ray(hitRecord.p, lightDir), renderData, minT);
-
-                            if (shadowRec.materialID > 1 && (shadowRec.p - hitRecord.p).lengthSquared() > (lightDir.lengthSquared() - (light.radius * light.radius))) // the second part of this IF could probably be much more efficent
-                            {
-                                MaterialData material = renderData.mats[shadowRec.materialID];
-                                if (material.type > 1)
-                                {
-                                    luminance += lightMap.color * Math.Max(0, Vec3.dot(lightDir, hitRecord.normal));
-                                    luminance *= XMath.Pow(XMath.Max(0, Vec3.dot(-Vec3.reflect(hitRecord.normal, -lightDir), frameData.rayBuffer[pixel].b)), material.reflectivity) * lightMap.color;
-                                }
-                            }
-                        }
-
-                        lighting += luminance;
+                        lighting *= (SampleLights(pixel, lightsToSample, renderData, frameData, hitRecord, ref rng, minT) * bouncePower);
                     }
                 }
             }
 
+            WriteColorToFrameBuffer(pixel, frameData, attenuation, lighting);
+            frameData.rngBuffer[pixel] = rng;
+        }
+
+        private static Vec3 ColorHit(int pixel, int bounce, dRenderData renderData, dFrameData frameData, HitRecord hitRecord, ref Ray currentRay, ref XorShift128Plus rng, float minT)
+        {
+
+            ScatterRecord sRec = Scatter(currentRay, hitRecord, ref rng, renderData.mats, minT);
+            if (sRec.materialID != -1)
+            {
+                currentRay = sRec.scatterRay;
+                return sRec.attenuation;
+            }
+            else
+            {
+                frameData.metaBuffer[pixel] = -1;
+                return new Vec3();
+            }
+        }
+
+        private static Vec3 SampleLights(int pixel, int lightsToSample, dRenderData renderData, dFrameData frameData, HitRecord hitRecord, ref XorShift128Plus rng, float minT)
+        {
+            Vec3 luminance = new Vec3(1, 1, 1);
+
+            for (int j = 0; j < lightsToSample; j++)
+            {
+                Sphere light = renderData.spheres[renderData.lightSphereIDs[rng.Next(0, renderData.lightSphereIDs.Length)]];
+                MaterialData lightMat = renderData.mats[light.materialIndex];
+                Vec3 lightDir = (light.center - hitRecord.p);
+
+                HitRecord shadowRec = GetWorldHit(renderData, new Ray(hitRecord.p, lightDir), renderData, minT);
+
+                bool hit = shadowRec.materialID > 0 && renderData.mats[shadowRec.materialID].type != MaterialData.LIGHT;
+                
+                if(!hit)
+                {
+                    luminance *= lightMat.color;
+                }
+            }
+
+            return luminance;
+        }
+
+        private static void WriteFirstHitData(int pixel, dFrameData frameData, HitRecord hitRecord)
+        {
+            frameData.depthBuffer[pixel] = hitRecord.t;
+            frameData.metaBuffer[pixel] = hitRecord.drawableID;
+        }
+
+        private static void WriteColorToFrameBuffer(int pixel, dFrameData frameData, Vec3 color, Vec3 light)
+        {
             int rIndex = pixel * 3;
             int gIndex = rIndex + 1;
             int bIndex = rIndex + 2;
 
-            frameData.colorBuffer[rIndex] = attenuation.x;
-            frameData.colorBuffer[gIndex] = attenuation.y;
-            frameData.colorBuffer[bIndex] = attenuation.z;
+            frameData.colorBuffer[rIndex] = color.x;
+            frameData.colorBuffer[gIndex] = color.y;
+            frameData.colorBuffer[bIndex] = color.z;
 
-            frameData.lightBuffer[rIndex] = lighting.x / lightsToSample;
-            frameData.lightBuffer[gIndex] = lighting.y / lightsToSample;
-            frameData.lightBuffer[bIndex] = lighting.z / lightsToSample;
-
-            frameData.rngBuffer[pixel] = rng;
+            frameData.lightBuffer[rIndex] = light.x;
+            frameData.lightBuffer[gIndex] = light.y;
+            frameData.lightBuffer[bIndex] = light.z;
         }
 
         public static void NormalizeLighting(Index1 index, ArrayView<float> data)
@@ -299,13 +305,13 @@ namespace NullEngine.Rendering.Implementation
                 }
                 else
                 {
-                    if(ticksSinceCameraMovement == 0)
+                    if (ticksSinceCameraMovement == 0)
                     {
                         exponent = 1;
                     }
-                    else if(ticksSinceCameraMovement > 0)
+                    else if (ticksSinceCameraMovement > 1)
                     {
-                        exponent = exponent / ticksSinceCameraMovement;
+                        exponent = exponent / (ticksSinceCameraMovement / 2);
                     }
 
                     frameData.TAABuffer[rIndex] = (exponent * frameData.colorBuffer[rIndex]) + ((1 - exponent) * frameData.TAABuffer[rIndex]);
@@ -385,6 +391,28 @@ namespace NullEngine.Rendering.Implementation
         }
 
         private static Vec3 RandomUnitVector(ref XorShift128Plus rng)
+        {
+            return RandomUnitVectorInaccurate(ref rng);
+            //return RandomUnitVectorSlow(ref rng);
+        }
+
+        public static Vec3 RandomUnitVectorInaccurate(ref XorShift128Plus rng)
+        {
+            Vec3 random = default;
+
+            for (int i = 0; i < 4; i++)
+            {
+                random = new Vec3(rng.NextFloat(), rng.NextFloat(), rng.NextFloat());
+                if (random.lengthSquared() <= 1)
+                {
+                    return random;
+                }
+            }
+
+            return Vec3.unitVector(random);
+        }
+
+        public static Vec3 RandomUnitVectorSlow(ref XorShift128Plus rng)
         {
             float a = 2f * XMath.PI * rng.NextFloat();
             float z = (rng.NextFloat() * 2f) - 1f;
@@ -553,8 +581,8 @@ namespace NullEngine.Rendering.Implementation
 
             if (material.type == 0) //Diffuse
             {
-                refracted = rec.p + rec.normal + RandomUnitVector(ref rng);
-                return new ScatterRecord(rec.materialID, new Ray(rec.p, refracted - rec.p), material.color, false);
+                refracted = rec.normal + RandomUnitVector(ref rng);
+                return new ScatterRecord(rec.materialID, new Ray(rec.p, refracted), material.color, false);
             }
             else if (material.type == 1) // dielectric
             {
@@ -633,14 +661,14 @@ namespace NullEngine.Rendering.Implementation
         public int materialID;
         public Ray scatterRay;
         public Vec3 attenuation;
-        public bool mirrorSkyLightingFix;
+        public bool hitSky;
 
         public ScatterRecord(int materialID, Ray scatterRay, Vec3 attenuation, bool mirrorSkyLightingFix)
         {
             this.materialID = materialID;
             this.scatterRay = scatterRay;
             this.attenuation = attenuation;
-            this.mirrorSkyLightingFix = mirrorSkyLightingFix;
+            this.hitSky = mirrorSkyLightingFix;
         }
     }
 
