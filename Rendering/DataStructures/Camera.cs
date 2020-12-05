@@ -14,9 +14,14 @@ namespace NullEngine.Rendering.DataStructures
     {
         public SpecializedValue<int> height;
         public SpecializedValue<int> width;
+
+        public int mode;
         public SpecializedValue<int> maxColorBounces;
         public SpecializedValue<int> lightsPerSample;
         public SpecializedValue<int> lightBounces;
+        public SpecializedValue<float> minLight;
+        public SpecializedValue<float> TAAExponent;
+        public Vec3 noHitColor;
 
         public float verticalFov;
 
@@ -30,16 +35,19 @@ namespace NullEngine.Rendering.DataStructures
         public float reciprocalHeight;
         public float reciprocalWidth;
 
-        public int mode;
 
         public Camera(Camera camera, Vec3 movement, Vec3 turn)
         {
-            mode = camera.mode;
             this.width = camera.width;
             this.height = camera.height;
+
+            mode = camera.mode;
             this.maxColorBounces = camera.maxColorBounces;
             this.lightsPerSample = camera.lightsPerSample;
             this.lightBounces = camera.lightBounces;
+            this.minLight = camera.minLight;
+            this.TAAExponent = camera.TAAExponent;
+            this.noHitColor = camera.noHitColor;
 
             Vector4 temp = camera.lookAt - camera.origin;
 
@@ -75,6 +83,9 @@ namespace NullEngine.Rendering.DataStructures
             this.maxColorBounces = camera.maxColorBounces;
             this.lightsPerSample = camera.lightsPerSample;
             this.lightBounces = camera.lightBounces;
+            this.minLight = camera.minLight;
+            this.TAAExponent = camera.TAAExponent;
+            this.noHitColor = camera.noHitColor;
 
             this.verticalFov = camera.verticalFov;
 
@@ -90,7 +101,7 @@ namespace NullEngine.Rendering.DataStructures
             reciprocalWidth = 1.0f / width;
         }
 
-        public Camera(Vec3 origin, Vec3 lookAt, Vec3 up, int width, int height, int maxColorBounces, int lightsPerSample, int lightBounces, float verticalFov)
+        public Camera(Vec3 origin, Vec3 lookAt, Vec3 up, int width, int height, int maxColorBounces, int lightsPerSample, int lightBounces, float verticalFov, float minLight, float TAAExponent, Vec3 noHitColor)
         {
             mode = 0;
             this.width = new SpecializedValue<int>(width);
@@ -98,6 +109,9 @@ namespace NullEngine.Rendering.DataStructures
             this.maxColorBounces = new SpecializedValue<int>(maxColorBounces);
             this.lightsPerSample = new SpecializedValue<int>(lightsPerSample);
             this.lightBounces = new SpecializedValue<int>(lightBounces);
+            this.minLight = new SpecializedValue<float>(minLight);
+            this.TAAExponent = new SpecializedValue<float>(TAAExponent);
+            this.noHitColor = noHitColor;
 
             this.verticalFov = verticalFov;
             this.origin = origin;

@@ -53,7 +53,7 @@ namespace NullEngine.Rendering
             int blueMat = renderDataManager.addMaterialForID(MaterialData.makeDiffuse(new Vec3(0, 0, 0.9999)));
             int lightMat = renderDataManager.addMaterialForID(MaterialData.makeLight(new Vec3(1, 1, 1)));
             int floorMat = renderDataManager.addMaterialForID(MaterialData.makeDiffuse(new Vec3(1, 1, 1)));
-            int metalMat = renderDataManager.addMaterialForID(MaterialData.makeMirror(new Vec3(0.9999, 0.9999, 0.9999), 0.2f));
+            int metalMat = renderDataManager.addMaterialForID(MaterialData.makeMirror(new Vec3(0.9999, 0.9999, 0.9999), 0.25f));
             int mirrorMat = renderDataManager.addMaterialForID(MaterialData.makeMirror(new Vec3(0.9999, 0.9999, 0.9999)));
             int redLightMat = renderDataManager.addMaterialForID(MaterialData.makeLight(new Vec3(0.9999, 0.1, 0.1)));
             int blueLightMat = renderDataManager.addMaterialForID(MaterialData.makeLight(new Vec3(0.1, 0.1, 0.9999)));
@@ -87,7 +87,7 @@ namespace NullEngine.Rendering
                 float size = (float)(rng.NextDouble() * 2);
                 renderDataManager.addSphereForID(new Sphere(new Vec3(rng.Next(-25, 25), size, rng.Next(5, 25)), size, mat));
             }
-            camera = new Camera(new Vec3(-0.25, 1, 7.5), new Vec3(-0.25, 1.12, 6.5), Vec3.unitVector(new Vec3(0, 1, 0)), 300, 300, 5, 3, 4, 40f);
+            camera = new Camera(new Vec3(-0.25, 1, 7.5), new Vec3(-0.25, 1.12, 6.5), Vec3.unitVector(new Vec3(0, 1, 0)), 300, 300, 5, 3, 4, 40f, 15f / 255f, 0.90f, new Vec3(0.2, 0.7, 1));
 
             frameTimer = new FrameTimer();
 
