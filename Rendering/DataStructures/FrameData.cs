@@ -5,6 +5,7 @@ using ILGPU.Algorithms.Random;
 using System;
 using System.Collections.Generic;
 using System.Text;
+using NullEngine.Utils;
 
 namespace NullEngine.Rendering.DataStructures
 {
@@ -12,6 +13,7 @@ namespace NullEngine.Rendering.DataStructures
     {
         public int width;
         public int height;
+        public long bytesAllocated = 0;
 
         public MemoryBuffer<float> colorBuffer;
         public MemoryBuffer<float> TAABuffer;
@@ -39,6 +41,17 @@ namespace NullEngine.Rendering.DataStructures
 
             rayBuffer = device.Allocate<Ray>(width * height);
             rngBuffer = device.Allocate<XorShift128Plus>(width * height);
+
+            bytesAllocated += colorBuffer.LengthInBytes;
+            bytesAllocated += TAABuffer.LengthInBytes;
+            bytesAllocated += lightBuffer.LengthInBytes;
+            bytesAllocated += depthBuffer.LengthInBytes;
+            bytesAllocated += outputBuffer.LengthInBytes;
+            bytesAllocated += metaBuffer.LengthInBytes;
+            bytesAllocated += rayBuffer.LengthInBytes;
+            bytesAllocated += rngBuffer.LengthInBytes;
+
+            Log.d("Allocated framebuffer " + width + " " + height + " totaling " + bytesAllocated / 1024.0 / 1024.0 + " MB");
 
             deviceFrameData = new dFrameData(this);
         }

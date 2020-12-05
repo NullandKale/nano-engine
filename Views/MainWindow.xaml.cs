@@ -38,6 +38,7 @@ namespace NullEngine.Views
         public double FrameHeight;
 
         private TextBlock Info;
+        private TextBlock FrameInfo;
 
         public Renderer renderer;
 
@@ -49,7 +50,7 @@ namespace NullEngine.Views
             }
             else
             {
-                scale = -2;
+                scale = -1;
             }
 
             InitializeComponent();
@@ -60,6 +61,7 @@ namespace NullEngine.Views
             AvaloniaXamlLoader.Load(this);
             Frame = this.FindControl<Image>("Frame");
             Info = this.FindControl<TextBlock>("Info");
+            FrameInfo = this.FindControl<TextBlock>("FrameInfo");
             ClientSizeProperty.Changed.Subscribe(HandleResized);
             Closing += MainWindow_Closing;
             Frame.PointerEnter += MainWindow_PointerEnter;
@@ -241,6 +243,7 @@ namespace NullEngine.Views
                 Frame.InvalidateVisual();
 
                 Info.Text = (int)renderer.frameTimer.averageUpdateRate + " FPS " + (int)frameRate + " MS\n" + renderer.camera.origin + "\n" + renderer.camera.lookAt;
+                FrameInfo.Text = "WASD to move\n" + (isMouseActive ? "E to capture mouse\n" : "E to release mouse\n") + "Camera Mode " + MiscUtils.CameraModeToString(renderer.camera.mode) + "\nPress 1 2 3 to change camera mode";
             }
             else
             {

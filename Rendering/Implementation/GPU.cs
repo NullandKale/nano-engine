@@ -132,8 +132,7 @@ namespace NullEngine.Rendering.Implementation
 
             for (int i = 0; i < camera.maxColorBounces; i++)
             {
-                float bouncePower = (1f / (i + 1f));
-                HitRecord hitRecord = GetWorldHit(renderData, currentRay, renderData, minT);
+                HitRecord hitRecord = GetWorldHit(renderData, currentRay, minT);
 
                 if (hitRecord.materialID != -1)
                 {
@@ -142,21 +141,33 @@ namespace NullEngine.Rendering.Implementation
                         WriteFirstHitData(pixel, frameData, hitRecord);
                     }
 
-                    attenuation *= (ColorHit(pixel, i, renderData, frameData, hitRecord, ref currentRay, ref rng, minT) * bouncePower);
-                    if (i < camera.lightBounces)
+                    attenuation *= (ColorHit(pixel, renderData, frameData, hitRecord, ref currentRay, ref rng, minT));
+                    if (i < camera.lightBounces && frameData.metaBuffer[pixel] != -1)
                     {
-                        lighting *= (SampleLights(pixel, lightsToSample, renderData, frameData, hitRecord, ref rng, minT) * bouncePower);
+                        lighting *= (SampleLights(lightsToSample, renderData, hitRecord, ref rng));
+                    }
+                    else
+                    {
+                        lighting *= new Vec3(0.05f, 0.05f, 0.05f);
                     }
                 }
+                else
+                {
+                    if(i == 0)
+                    {
+                        WriteColorToFrameBuffer(pixel, frameData, new Vec3(0.5f, 0f, 0.5f), new Vec3());
+                        frameData.rngBuffer[pixel] = rng;
+                        frameData.metaBuffer[pixel] = -1;
+                        return;
+                    }    
+                }
             }
-
             WriteColorToFrameBuffer(pixel, frameData, attenuation, lighting);
             frameData.rngBuffer[pixel] = rng;
         }
 
-        private static Vec3 ColorHit(int pixel, int bounce, dRenderData renderData, dFrameData frameData, HitRecord hitRecord, ref Ray currentRay, ref XorShift128Plus rng, float minT)
+        private static Vec3 ColorHit(int pixel, dRenderData renderData, dFrameData frameData, HitRecord hitRecord, ref Ray currentRay, ref XorShift128Plus rng, float minT)
         {
-
             ScatterRecord sRec = Scatter(currentRay, hitRecord, ref rng, renderData.mats, minT);
             if (sRec.materialID != -1)
             {
@@ -170,27 +181,33 @@ namespace NullEngine.Rendering.Implementation
             }
         }
 
-        private static Vec3 SampleLights(int pixel, int lightsToSample, dRenderData renderData, dFrameData frameData, HitRecord hitRecord, ref XorShift128Plus rng, float minT)
+        private static Vec3 SampleLights(int lightsToSample, dRenderData renderData, HitRecord hitRecord, ref XorShift128Plus rng)
         {
             Vec3 luminance = new Vec3(1, 1, 1);
+            int hit = 0;
 
             for (int j = 0; j < lightsToSample; j++)
             {
                 Sphere light = renderData.spheres[renderData.lightSphereIDs[rng.Next(0, renderData.lightSphereIDs.Length)]];
                 MaterialData lightMat = renderData.mats[light.materialIndex];
-                Vec3 lightDir = (light.center - hitRecord.p);
+                Vec3 lightDir = light.center - (hitRecord.p + (hitRecord.normal * (rng.NextFloat() * 0.1f)));
 
-                HitRecord shadowRec = GetWorldHit(renderData, new Ray(hitRecord.p, lightDir), renderData, minT);
-
-                bool hit = shadowRec.materialID > 0 && renderData.mats[shadowRec.materialID].type != MaterialData.LIGHT;
-                
-                if(!hit)
+                HitRecord shadowRec = GetWorldHit(renderData, new Ray(hitRecord.p, lightDir), 0.00001f);
+                if(shadowRec.materialID != -1 && renderData.mats[shadowRec.materialID].type == MaterialData.LIGHT)
                 {
-                    luminance *= lightMat.color;
+                    luminance *= (lightMat.color * XMath.Max(0f, Vec3.dot(hitRecord.normal, lightDir)));
+                    hit++;
                 }
             }
 
-            return luminance;
+            if(hit > 0)
+            {
+                return luminance;
+            }
+            else
+            {
+                return new Vec3();
+            }
         }
 
         private static void WriteFirstHitData(int pixel, dFrameData frameData, HitRecord hitRecord)
@@ -222,8 +239,8 @@ namespace NullEngine.Rendering.Implementation
 
             if (data[rIndex] != -1)
             {
-                Vec3 color = Vec3.reinhard(new Vec3(data[rIndex], data[gIndex], data[bIndex]));
-                //Vec3 color = Vec3.aces_approx(new Vec3(data[rIndex], data[gIndex], data[bIndex]));
+                //Vec3 color = Vec3.reinhard(new Vec3(data[rIndex], data[gIndex], data[bIndex]));
+                Vec3 color = Vec3.aces_approx(new Vec3(data[rIndex], data[gIndex], data[bIndex]));
 
                 data[rIndex] = color.x;
                 data[gIndex] = color.y;
@@ -237,7 +254,7 @@ namespace NullEngine.Rendering.Implementation
             int gIndex = rIndex + 1;
             int bIndex = rIndex + 2;
 
-            float minLight = 0f;
+            const float minLight = 15.0f / 255.0f;
 
             Vec3 col = new Vec3(frameData.colorBuffer[rIndex], frameData.colorBuffer[gIndex], frameData.colorBuffer[bIndex]);
             Vec3 light = new Vec3(frameData.lightBuffer[rIndex], frameData.lightBuffer[gIndex], frameData.lightBuffer[bIndex]);
@@ -260,9 +277,9 @@ namespace NullEngine.Rendering.Implementation
                         }
                         else
                         {
-                            frameData.colorBuffer[rIndex] = col.x * (light.x < minLight ? minLight : light.x);
-                            frameData.colorBuffer[gIndex] = col.y * (light.y < minLight ? minLight : light.y);
-                            frameData.colorBuffer[bIndex] = col.z * (light.z < minLight ? minLight : light.z);
+                            frameData.colorBuffer[rIndex] = col.x * (light.x < minLight ? light.x + minLight : light.x);
+                            frameData.colorBuffer[gIndex] = col.y * (light.y < minLight ? light.y + minLight : light.y);
+                            frameData.colorBuffer[bIndex] = col.z * (light.z < minLight ? light.z + minLight : light.z);
                         }
                         return;
                     }
@@ -275,9 +292,9 @@ namespace NullEngine.Rendering.Implementation
                     }
                 case 2:
                     {
-                        frameData.colorBuffer[rIndex] = (light.x < minLight ? minLight : light.x);
-                        frameData.colorBuffer[gIndex] = (light.y < minLight ? minLight : light.y);
-                        frameData.colorBuffer[bIndex] = (light.z < minLight ? minLight : light.z);
+                        frameData.colorBuffer[rIndex] = (light.x < minLight ? light.x + minLight : light.x);
+                        frameData.colorBuffer[gIndex] = (light.y < minLight ? light.y + minLight : light.y);
+                        frameData.colorBuffer[bIndex] = (light.z < minLight ? light.z + minLight : light.z);
                         return;
                     }
             }
@@ -297,27 +314,18 @@ namespace NullEngine.Rendering.Implementation
             }
             else
             {
-                if ((float)tick < (1f / exponent))
+                if (ticksSinceCameraMovement == 0)
                 {
-                    frameData.TAABuffer[rIndex] = ((1.0f / tick) * frameData.colorBuffer[rIndex]) + ((1 - (1.0f / tick)) * frameData.TAABuffer[rIndex]);
-                    frameData.TAABuffer[gIndex] = ((1.0f / tick) * frameData.colorBuffer[gIndex]) + ((1 - (1.0f / tick)) * frameData.TAABuffer[gIndex]);
-                    frameData.TAABuffer[bIndex] = ((1.0f / tick) * frameData.colorBuffer[bIndex]) + ((1 - (1.0f / tick)) * frameData.TAABuffer[bIndex]);
+                    exponent = 1;
                 }
-                else
+                else if (ticksSinceCameraMovement > 1)
                 {
-                    if (ticksSinceCameraMovement == 0)
-                    {
-                        exponent = 1;
-                    }
-                    else if (ticksSinceCameraMovement > 1)
-                    {
-                        exponent = exponent / (ticksSinceCameraMovement / 2);
-                    }
+                    exponent = exponent / (ticksSinceCameraMovement / 2);
+                }
 
-                    frameData.TAABuffer[rIndex] = (exponent * frameData.colorBuffer[rIndex]) + ((1 - exponent) * frameData.TAABuffer[rIndex]);
-                    frameData.TAABuffer[gIndex] = (exponent * frameData.colorBuffer[gIndex]) + ((1 - exponent) * frameData.TAABuffer[gIndex]);
-                    frameData.TAABuffer[bIndex] = (exponent * frameData.colorBuffer[bIndex]) + ((1 - exponent) * frameData.TAABuffer[bIndex]);
-                }
+                frameData.TAABuffer[rIndex] = (exponent * frameData.colorBuffer[rIndex]) + ((1 - exponent) * frameData.TAABuffer[rIndex]);
+                frameData.TAABuffer[gIndex] = (exponent * frameData.colorBuffer[gIndex]) + ((1 - exponent) * frameData.TAABuffer[gIndex]);
+                frameData.TAABuffer[bIndex] = (exponent * frameData.colorBuffer[bIndex]) + ((1 - exponent) * frameData.TAABuffer[bIndex]);
             }
         }
 
@@ -420,9 +428,9 @@ namespace NullEngine.Rendering.Implementation
             return new Vec3(r * XMath.Cos(a), r * XMath.Sin(a), z);
         }
 
-        private static HitRecord GetWorldHit(dRenderData renderData, Ray r, dRenderData world, float minT)
+        private static HitRecord GetWorldHit(dRenderData renderData, Ray r, float minT)
         {
-            HitRecord rec = GetSphereHit(renderData, r, world.spheres, minT);
+            HitRecord rec = GetSphereHit(renderData, r, renderData.spheres, minT);
             //HitRecord vRec = world.VoxelChunk.hit(r, minT, rec.t);
             //HitRecord triRec = GetMeshHit(r, world, vRec.t);
 
@@ -458,7 +466,7 @@ namespace NullEngine.Rendering.Implementation
                 float c = Vec3.dot(oc, oc) - s.radiusSquared;
                 float discr = (b * b) - (c);
 
-                if (discr > 0.00001f)
+                if (discr > 0f)
                 {
                     float sqrtdisc = XMath.Sqrt(discr);
                     float temp = (-b - sqrtdisc);
