@@ -13,11 +13,11 @@ namespace NullEngine.Rendering.DataStructures
         public const int METAL = 2;
         public const int LIGHT = 3;
 
-        public int type;
-        public Vec3 color;
-        public float ref_idx;
-        public float reflectivity;
-        public float reflectionConeAngleRadians;
+        public int type{ get; set; }
+        public Vec3 color{ get; set; }
+        public float ref_idx{ get; set; }
+        public float reflectivity{ get; set; }
+        public float reflectionConeAngleRadians{ get; set; }
 
         public MaterialData(Vec3 color, float ref_idx, float reflectivity, float reflectionConeAngleRadians, int type)
         {

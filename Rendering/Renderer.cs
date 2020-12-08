@@ -13,6 +13,7 @@ using Avalonia.Controls;
 using NullEngine.Views;
 using Avalonia.Threading;
 using System.Diagnostics;
+using NullEngine.Scenes;
 
 namespace NullEngine.Rendering
 {
@@ -36,6 +37,7 @@ namespace NullEngine.Rendering
         public Camera camera;
         private RenderDataManager renderDataManager;
         private FrameData frameData;
+        private Scene scene;
 
         private int tick = 0;
         private int lastCameraMovementTick = 0;
@@ -48,51 +50,27 @@ namespace NullEngine.Rendering
             gpu = new GPU(forceCPU, isLinux);
             renderDataManager = new RenderDataManager(gpu);
 
-            int redMat = renderDataManager.addMaterialForID(MaterialData.makeDiffuse(new Vec3(0.9999, 0, 0)));
-            int greenMat = renderDataManager.addMaterialForID(MaterialData.makeDiffuse(new Vec3(0, 0.9999, 0)));
-            int blueMat = renderDataManager.addMaterialForID(MaterialData.makeDiffuse(new Vec3(0, 0, 0.9999)));
-            int lightMat = renderDataManager.addMaterialForID(MaterialData.makeLight(new Vec3(1, 1, 1)));
-            int floorMat = renderDataManager.addMaterialForID(MaterialData.makeDiffuse(new Vec3(1, 1, 1)));
-            int metalMat = renderDataManager.addMaterialForID(MaterialData.makeMirror(new Vec3(0.9999, 0.9999, 0.9999), 0.25f));
-            int mirrorMat = renderDataManager.addMaterialForID(MaterialData.makeMirror(new Vec3(0.9999, 0.9999, 0.9999)));
-            int redLightMat = renderDataManager.addMaterialForID(MaterialData.makeLight(new Vec3(0.9999, 0.1, 0.1)));
-            int blueLightMat = renderDataManager.addMaterialForID(MaterialData.makeLight(new Vec3(0.1, 0.1, 0.9999)));
+            //scene = DebugScene.Load();
+            //scene.Save();
+            scene = Scene.Load("debug_scene.json");
 
-            renderDataManager.addSphereForID(new Sphere(new Vec3(0, 1, 0), 0.5f, redMat));
-            renderDataManager.addSphereForID(new Sphere(new Vec3(1, 1, 0), 0.5f, greenMat));
-            renderDataManager.addSphereForID(new Sphere(new Vec3(-1, 1, 0), 0.5f, blueMat));
-            renderDataManager.addSphereForID(new Sphere(new Vec3(0, 15, 5), 0.1f, lightMat));
-            //renderDataManager.addSphereForID(new Sphere(new Vec3(-25, 5, 0), 1f, redLightMat));
-            //renderDataManager.addSphereForID(new Sphere(new Vec3(25, 5, 0), 1f, blueLightMat));
-            renderDataManager.addSphereForID(new Sphere(new Vec3(-1, -100000, 0), 100000f, floorMat));
-            renderDataManager.addSphereForID(new Sphere(new Vec3(7, 5, 0), 5f, mirrorMat));
-            renderDataManager.addSphereForID(new Sphere(new Vec3(-7, 5, 0), 5f, mirrorMat));
-            renderDataManager.addSphereForID(new Sphere(new Vec3(0, 5, -7), 5f, metalMat));
-
-            Random rng = new Random(0);
-
-            for (int i = 0; i < 50; i++)
-            {
-                int mat = redMat;
-
-                if (rng.NextDouble() < 0.50)
-                {
-                    mat = renderDataManager.addMaterialForID(MaterialData.makeDiffuse(new Vec3(rng.NextDouble() > 0.5 ? 0.1 : 0.9, rng.NextDouble() > 0.5 ? 0.1 : 0.9, rng.NextDouble() > 0.5 ? 0.1 : 0.9)));
-                }
-                else
-                {
-                    mat = renderDataManager.addMaterialForID(MaterialData.makeMirror(new Vec3(rng.NextDouble() > 0.5 ? 0.1 : 0.9, rng.NextDouble() > 0.5 ? 0.1 : 0.9, rng.NextDouble() > 0.5 ? 0.1 : 0.9)));
-                }
-
-                float size = (float)(rng.NextDouble() * 2);
-                renderDataManager.addSphereForID(new Sphere(new Vec3(rng.Next(-25, 25), size, rng.Next(5, 25)), size, mat));
-            }
-            camera = new Camera(new Vec3(-0.25, 1, 7.5), new Vec3(-0.25, 1.12, 6.5), Vec3.unitVector(new Vec3(0, 1, 0)), 300, 300, 5, 3, 4, 40f, 15f / 255f, 0.90f, new Vec3(0.2, 0.7, 1));
+            LoadSceneData();
 
             frameTimer = new FrameTimer();
 
             renderThread = new Thread(RenderThread);
             renderThread.IsBackground = true;
+        }
+
+        public void LoadSceneData()
+        {
+            camera = scene.sceneData.mainCamera;
+            for(int i = 0; i < scene.sceneData.spheres.Count; i++)
+            {
+                Sphere toAdd = scene.sceneData.spheres[i];
+                toAdd.materialIndex = renderDataManager.addMaterialForID(scene.sceneData.materials[toAdd.materialIndex]);
+                renderDataManager.addSphereForID(toAdd);
+            }
         }
 
         public void Start()
@@ -104,6 +82,9 @@ namespace NullEngine.Rendering
         {
             run = false;
             renderThread.Join();
+
+            scene.sceneData.mainCamera = camera;
+            scene.Save();
         }
 
         public void OnResChanged(int width, int height)
@@ -119,12 +100,14 @@ namespace NullEngine.Rendering
         {
             camera.mode = mode;
             lastCameraMovementTick = tick;
+            scene.sceneData.mainCamera = camera;
         }
 
         public void CameraUpdate(Vec3 movement, Vec3 turn)
         {
             camera = new Camera(camera, movement, turn);
             lastCameraMovementTick = tick;
+            scene.sceneData.mainCamera = camera;
         }
 
         //eveything below this happens in the render thread

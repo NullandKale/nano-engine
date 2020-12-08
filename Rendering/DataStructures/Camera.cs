@@ -12,28 +12,28 @@ namespace NullEngine.Rendering.DataStructures
 {
     public struct Camera
     {
-        public SpecializedValue<int> height;
-        public SpecializedValue<int> width;
+        public SpecializedValue<int> height{ get; set; }
+        public SpecializedValue<int> width{ get; set; }
 
-        public int mode;
-        public SpecializedValue<int> maxColorBounces;
-        public SpecializedValue<int> lightsPerSample;
-        public SpecializedValue<int> lightBounces;
-        public SpecializedValue<float> minLight;
-        public SpecializedValue<float> TAAExponent;
-        public Vec3 noHitColor;
+        public int mode{ get; set; }
+        public SpecializedValue<int> maxColorBounces{ get; set; }
+        public SpecializedValue<int> lightsPerSample{ get; set; }
+        public SpecializedValue<int> lightBounces{ get; set; }
+        public SpecializedValue<float> minLight{ get; set; }
+        public SpecializedValue<float> TAAExponent{ get; set; }
+        public Vec3 noHitColor{ get; set; }
 
-        public float verticalFov;
+        public float verticalFov{ get; set; }
 
-        public Vec3 origin;
-        public Vec3 lookAt;
-        public Vec3 up;
-        public OrthoNormalBasis axis;
+        public Vec3 origin{ get; set; }
+        public Vec3 lookAt{ get; set; }
+        public Vec3 up{ get; set; }
+        public OrthoNormalBasis axis{ get; set; }
 
-        public float aspectRatio;
-        public float cameraPlaneDist;
-        public float reciprocalHeight;
-        public float reciprocalWidth;
+        public float aspectRatio{ get; set; }
+        public float cameraPlaneDist{ get; set; }
+        public float reciprocalHeight{ get; set; }
+        public float reciprocalWidth{ get; set; }
 
 
         public Camera(Camera camera, Vec3 movement, Vec3 turn)
@@ -144,11 +144,11 @@ namespace NullEngine.Rendering.DataStructures
         }
     }
 
-    public readonly struct OrthoNormalBasis
+    public struct OrthoNormalBasis
     {
-        public readonly Vec3 x;
-        public readonly Vec3 y;
-        public readonly Vec3 z;
+        public Vec3 x{ get; set; }
+        public Vec3 y{ get; set; }
+        public Vec3 z{ get; set; }
 
         public OrthoNormalBasis(Vec3 x, Vec3 y, Vec3 z)
         {

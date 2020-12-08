@@ -8,9 +8,9 @@ namespace NullEngine.Rendering.DataStructures
 {
     public struct Vec3
     {
-        public float x;
-        public float y;
-        public float z;
+        public float x{ get; set; }
+        public float y{ get; set; }
+        public float z{ get; set; }
 
         public Vec3(float x, float y, float z)
         {

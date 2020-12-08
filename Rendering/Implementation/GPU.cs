@@ -133,8 +133,9 @@ namespace NullEngine.Rendering.Implementation
             for (int i = 0; i < camera.maxColorBounces; i++)
             {
                 HitRecord hitRecord = GetWorldHit(renderData, currentRay, minT);
+                bool hit = hitRecord.materialID != -1;
 
-                if (hitRecord.materialID != -1)
+                if (hit)
                 {
                     if (i == 0)
                     {
@@ -184,23 +185,26 @@ namespace NullEngine.Rendering.Implementation
         private static Vec3 SampleLights(int lightsToSample, dRenderData renderData, HitRecord hitRecord, ref XorShift128Plus rng)
         {
             Vec3 luminance = new Vec3(1, 1, 1);
-            int hit = 0;
+            bool hit = false;
 
             for (int j = 0; j < lightsToSample; j++)
             {
                 Sphere light = renderData.spheres[renderData.lightSphereIDs[rng.Next(0, renderData.lightSphereIDs.Length)]];
                 MaterialData lightMat = renderData.mats[light.materialIndex];
-                Vec3 lightDir = light.center - (hitRecord.p + (hitRecord.normal * (rng.NextFloat() * 0.1f)));
+                
+                //Vec3 lightDir = light.center - (hitRecord.p + (hitRecord.normal * (rng.NextFloat() * 0.1f)));
+                Vec3 lightDir = light.center - hitRecord.p;
+                float maxDist = lightDir.length() - light.radius + 0.01f;
 
-                HitRecord shadowRec = GetWorldHit(renderData, new Ray(hitRecord.p, lightDir), 0.00001f);
+                HitRecord shadowRec = GetWorldHit(renderData, new Ray(hitRecord.p, lightDir), maxDist);
                 if(shadowRec.materialID != -1 && renderData.mats[shadowRec.materialID].type == MaterialData.LIGHT)
                 {
-                    luminance *= (lightMat.color * XMath.Max(0f, Vec3.dot(hitRecord.normal, lightDir)));
-                    hit++;
+                    luminance *= (lightMat.color * XMath.Max(0, Vec3.dot(hitRecord.normal, lightDir)));
+                    hit = true;
                 }
             }
 
-            if(hit > 0)
+            if(hit)
             {
                 return luminance;
             }
@@ -428,7 +432,7 @@ namespace NullEngine.Rendering.Implementation
 
         private static HitRecord GetWorldHit(dRenderData renderData, Ray r, float minT)
         {
-            HitRecord rec = GetSphereHit(renderData, r, renderData.spheres, minT);
+            HitRecord rec = GetSphereHit(renderData, r, minT);
             //HitRecord vRec = world.VoxelChunk.hit(r, minT, rec.t);
             //HitRecord triRec = GetMeshHit(r, world, vRec.t);
 
@@ -446,8 +450,7 @@ namespace NullEngine.Rendering.Implementation
             //}
         }
 
-
-        private static HitRecord GetSphereHit(dRenderData renderData, Ray r, ArrayView<Sphere> spheres, float minT)
+        private static HitRecord GetLightHit(dRenderData renderData, Ray r, float minT)
         {
             float closestT = float.MaxValue;
             int sphereIndex = -1;
@@ -455,9 +458,9 @@ namespace NullEngine.Rendering.Implementation
             Sphere s;
             Vec3 oc;
 
-            for (int i = 0; i < spheres.Length; i++)
+            for (int i = 0; i < renderData.lightSphereIDs.Length; i++)
             {
-                s = spheres[i];
+                s = renderData.spheres[renderData.lightSphereIDs[i]];
                 oc = r.a - s.center;
 
                 float b = Vec3.dot(oc, r.b);
@@ -488,7 +491,58 @@ namespace NullEngine.Rendering.Implementation
             if (sphereIndex != -1)
             {
                 oc = r.pointAtParameter(closestT);
-                s = spheres[sphereIndex];
+                s = renderData.spheres[renderData.lightSphereIDs[sphereIndex]];
+                return new HitRecord(closestT, oc, (oc - s.center) / s.radius, r.b, s.materialIndex, sphereIndex);
+            }
+            else
+            {
+                return new HitRecord(float.MaxValue, new Vec3(), new Vec3(), false, -1, -1);
+            }
+        }
+
+
+        private static HitRecord GetSphereHit(dRenderData renderData, Ray r, float minT)
+        {
+            float closestT = float.MaxValue;
+            int sphereIndex = -1;
+
+            Sphere s;
+            Vec3 oc;
+
+            for (int i = 0; i < renderData.spheres.Length; i++)
+            {
+                s = renderData.spheres[i];
+                oc = r.a - s.center;
+
+                float b = Vec3.dot(oc, r.b);
+                float c = Vec3.dot(oc, oc) - s.radiusSquared;
+                float discr = (b * b) - (c);
+
+                if (discr > 0f)
+                {
+                    float sqrtdisc = XMath.Sqrt(discr);
+                    float temp = (-b - sqrtdisc);
+                    if (temp < closestT && temp > minT)
+                    {
+                        closestT = temp;
+                        sphereIndex = i;
+                    }
+                    else
+                    {
+                        temp = (-b + sqrtdisc);
+                        if (temp < closestT && temp > minT)
+                        {
+                            closestT = temp;
+                            sphereIndex = i;
+                        }
+                    }
+                }
+            }
+
+            if (sphereIndex != -1)
+            {
+                oc = r.pointAtParameter(closestT);
+                s = renderData.spheres[sphereIndex];
                 return new HitRecord(closestT, oc, (oc - s.center) / s.radius, r.b, s.materialIndex, sphereIndex);
             }
             else

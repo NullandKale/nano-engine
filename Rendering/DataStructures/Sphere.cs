@@ -10,10 +10,10 @@ namespace NullEngine.Rendering.DataStructures
     [StructLayout(LayoutKind.Sequential, Pack = 0)]
     public struct Sphere
     {
-        public Vec3 center;
-        public float radius;
-        public float radiusSquared;
-        public int materialIndex;
+        public Vec3 center{ get; set; }
+        public float radius{ get; set; }
+        public float radiusSquared{ get; set; }
+        public int materialIndex{ get; set; }
 
         public Sphere(Vec3 center, float radius, int materialIndex)
         {
